@@ -31,12 +31,20 @@ class PipelineChannels(BaseModel):
     physical_store: PipelineChannelCounts
 
 
+class PipelineEventSummary(BaseModel):
+    title: str
+    detail: str | None = None
+    kind: str
+
+
 class PipelineEventOut(BaseModel):
     raw_event_id: str
     canonical_event_id: str | None = None
     source_event_id: str
     channel: Channel
     event_type: EventType | None = None
+    event_summary: PipelineEventSummary | None = None
+    has_order_reference: bool | None = None
     occurred_at: datetime
     received_at: datetime
     processed_at: datetime | None = None

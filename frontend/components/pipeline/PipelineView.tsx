@@ -425,10 +425,10 @@ export function PipelineView() {
                 <caption className="sr-only">Persisted pipeline events</caption>
                 <thead>
                   <tr className="text-xs font-semibold uppercase tracking-wide text-[#667085]">
-                    <th className="border-b border-[#E4E7EC] px-3 py-3">Received</th>
+                    <th className="border-b border-[#E4E7EC] px-3 py-3">When</th>
                     <th className="border-b border-[#E4E7EC] px-3 py-3">Source event</th>
                     <th className="border-b border-[#E4E7EC] px-3 py-3">Channel</th>
-                    <th className="border-b border-[#E4E7EC] px-3 py-3">Event type</th>
+                    <th className="border-b border-[#E4E7EC] px-3 py-3">Event</th>
                     <th className="border-b border-[#E4E7EC] px-3 py-3">Processing</th>
                     <th className="border-b border-[#E4E7EC] px-3 py-3">Identity</th>
                     <th className="border-b border-[#E4E7EC] px-3 py-3">Profile</th>
@@ -536,10 +536,28 @@ function SelectFilter({
 function EventRow({ event, onInspect }: { event: PipelineEventOut; onInspect: (rawEventId: string) => void }) {
   return (
     <tr className="group hover:bg-slate-50">
-      <td className="border-b border-[#EAECF0] px-3 py-3.5 text-sm text-[#475467]">{formatTimestamp(event.received_at)}</td>
+      <td className="border-b border-[#EAECF0] px-3 py-3.5 text-sm text-[#475467]">
+        <span className="font-medium text-[#344054]">{formatTimestamp(event.occurred_at)}</span>
+        <span className="mt-0.5 block text-xs text-[#98A2B3]">
+          received {formatTimestamp(event.received_at)}
+        </span>
+      </td>
       <td className="border-b border-[#EAECF0] px-3 py-3.5 font-mono text-xs font-semibold text-[#344054]">{event.source_event_id}</td>
       <td className="border-b border-[#EAECF0] px-3 py-3.5"><ChannelBadge channel={event.channel} /></td>
-      <td className="border-b border-[#EAECF0] px-3 py-3.5 text-sm text-[#344054]">{event.event_type ? getEventTypeLabel(event.event_type) : "Not normalized"}</td>
+      <td className="border-b border-[#EAECF0] px-3 py-3.5">
+        {event.event_summary ? (
+          <>
+            <span className="text-sm font-medium text-[#344054]">{event.event_summary.title}</span>
+            {event.event_summary.detail && (
+              <span className="text-sm text-[#667085]"> · {event.event_summary.detail}</span>
+            )}
+          </>
+        ) : event.event_type ? (
+          <span className="text-sm text-[#344054]">{getEventTypeLabel(event.event_type)}</span>
+        ) : (
+          <span className="text-sm text-[#98A2B3]">Not normalized</span>
+        )}
+      </td>
       <td className="border-b border-[#EAECF0] px-3 py-3.5">
         <ProcessingStatusBadge status={event.processing_status} />
         {event.processing_error_code && <p className="mt-1 text-xs font-medium text-rose-700">{event.processing_error_code}</p>}
