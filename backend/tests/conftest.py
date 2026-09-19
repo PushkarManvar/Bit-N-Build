@@ -98,3 +98,23 @@ def id04_device_only() -> dict:
 @pytest.fixture()
 def id04_email_plus_device() -> dict:
     return load_fixture("fixtures/g2/id04_email_plus_device.json")
+
+
+@pytest.fixture()
+def riya_return_requested() -> dict:
+    return load_fixture("fixtures/g4/riya_return_requested.json")
+
+
+@pytest.fixture()
+def riya_support_mobile() -> dict:
+    return load_fixture("fixtures/g4/riya_support_mobile.json")
+
+
+@pytest.fixture()
+def riya_support_call() -> dict:
+    return load_fixture("fixtures/g4/riya_support_call.json")
+
+
+@pytest.fixture()
+def riya_refund_completed() -> dict:
+    return load_fixture("fixtures/g4/riya_refund_completed.json")

@@ -1,0 +1,21 @@
+{
+  "source_event_id": "CC-204-SUP2",
+  "channel": "call_center",
+  "event_type": "support_contacted",
+  "occurred_at": "2026-09-15T11:00:00Z",
+  "schema_version": "1.0",
+  "identifiers": [
+    {
+      "type": "phone",
+      "value": "+91-98765-43210"
+    },
+    {
+      "type": "email",
+      "value": "RIYA.SHAH@EXAMPLE.COM"
+    }
+  ],
+  "entity_references": {
+    "order_id": "ORD-204"
+  },
+  "attributes": {}
+}

@@ -29,6 +29,7 @@ from app.schemas.events import (
 )
 from app.services.candidate_retriever import retrieve_candidates
 from app.services.identity_resolver import DecisionResult, decide
+from app.services.journey_analyzer import analyze_profile
 from app.services.normalizer import NormalizedEvent, normalize_for_channel
 from app.services.profile_service import (
     apply_auto_link,
@@ -124,6 +125,8 @@ def ingest_event(db: Session, envelope: EventIngestionRequest) -> IngestionResul
 
     canonical = _persist_canonical(db, raw, normalized)
     decision, resolved_profile_id = _resolve_identity(db, canonical, normalized)
+    if resolved_profile_id is not None:
+        analyze_profile(db, uuid.UUID(resolved_profile_id))
     raw.processing_status = ProcessingStatus.NORMALIZED
     db.commit()
 

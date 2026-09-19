@@ -1,0 +1,17 @@
+{
+  "source_event_id": "WEB-204-DONE",
+  "channel": "web",
+  "event_type": "refund_completed",
+  "occurred_at": "2026-09-16T12:00:00Z",
+  "schema_version": "1.0",
+  "identifiers": [
+    {
+      "type": "email",
+      "value": "RIYA.SHAH@EXAMPLE.COM"
+    }
+  ],
+  "entity_references": {
+    "order_id": "ORD-204"
+  },
+  "attributes": {}
+}

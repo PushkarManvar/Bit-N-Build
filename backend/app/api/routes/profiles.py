@@ -8,14 +8,18 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from app.core.enums import AlertStatus
 from app.db.models import (
     CanonicalEvent,
     CustomerProfile,
+    JourneyAlert,
     MatchDecision,
     ProfileIdentifier,
 )
 from app.db.session import get_db
 from app.schemas.profiles import (
+    AlertListResponse,
+    AlertOut,
     ProfileJourneyResponse,
     ProfileListResponse,
     ProfileSummary,
@@ -62,7 +66,7 @@ def list_profiles(
 
 @router.get("/profiles/{profile_id}", response_model=ProfileJourneyResponse)
 def profile_journey(profile_id: str, db: DbSession) -> ProfileJourneyResponse:
-    """Profile detail with chronological timeline (alerts land with Gate G4)."""
+    """Profile detail with chronological timeline and open alerts (Gate G4)."""
     try:
         profile_uuid = uuid.UUID(profile_id)
     except ValueError:
@@ -85,6 +89,14 @@ def profile_journey(profile_id: str, db: DbSession) -> ProfileJourneyResponse:
     ).all()
 
     timeline = [_timeline_event(canonical, decision) for canonical, decision in timeline_rows]
+    alerts = db.scalars(
+        select(JourneyAlert)
+        .where(
+            JourneyAlert.profile_id == profile_uuid,
+            JourneyAlert.status == AlertStatus.OPEN,
+        )
+        .order_by(JourneyAlert.created_at.desc())
+    ).all()
 
     return ProfileJourneyResponse(
         profile={
@@ -100,8 +112,33 @@ def profile_journey(profile_id: str, db: DbSession) -> ProfileJourneyResponse:
             ],
         },
         timeline=timeline,
-        alerts=[],
+        alerts=[_alert_out(alert) for alert in alerts],
         journey_summary=None,
+    )
+
+
+@router.get("/alerts", response_model=AlertListResponse)
+def list_open_alerts(db: DbSession) -> AlertListResponse:
+    """Open journey alerts across all profiles (Command Centre feed)."""
+    alerts = db.scalars(
+        select(JourneyAlert)
+        .where(JourneyAlert.status == AlertStatus.OPEN)
+        .order_by(JourneyAlert.created_at.desc())
+    ).all()
+    return AlertListResponse(items=[_alert_out(alert) for alert in alerts], total=len(alerts))
+
+
+def _alert_out(alert: JourneyAlert) -> AlertOut:
+    return AlertOut(
+        id=str(alert.id),
+        type=alert.type,
+        severity=alert.severity,
+        title=alert.title,
+        description=alert.description,
+        recommended_action=alert.recommended_action,
+        status=alert.status,
+        order_id=alert.order_id,
+        created_at=_to_utc(alert.created_at),
     )
 
 

@@ -10,7 +10,15 @@ from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String, Unique
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.enums import Channel, EventType, IdentityOutcome, ProcessingStatus
+from app.core.enums import (
+    AlertSeverity,
+    AlertStatus,
+    AlertType,
+    Channel,
+    EventType,
+    IdentityOutcome,
+    ProcessingStatus,
+)
 from app.db.base import Base
 
 
@@ -135,4 +143,39 @@ class MatchDecision(Base):
     decision_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_now_utc
+    )
+
+
+class JourneyAlert(Base):
+    """A detected journey-level problem for one profile (Gate G4).
+
+    Open alerts are deduplicated by (profile, order, type). Dedup is enforced
+    in the journey analyzer (deterministic, tested) plus a partial unique
+    index for Postgres.
+    """
+
+    __tablename__ = "journey_alerts"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("customer_profiles.id"), nullable=True, index=True
+    )
+    order_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    type: Mapped[AlertType] = mapped_column(
+        Enum(AlertType, native_enum=False), nullable=False
+    )
+    severity: Mapped[AlertSeverity] = mapped_column(
+        Enum(AlertSeverity, native_enum=False), nullable=False
+    )
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
+    description: Mapped[str] = mapped_column(String(1000), nullable=False)
+    recommended_action: Mapped[str] = mapped_column(String(500), nullable=False)
+    status: Mapped[AlertStatus] = mapped_column(
+        Enum(AlertStatus, native_enum=False), nullable=False, default=AlertStatus.OPEN
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_now_utc
+    )
+    resolved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
