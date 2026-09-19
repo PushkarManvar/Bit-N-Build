@@ -190,6 +190,34 @@ def test_dashboard_updates_endpoint(
     assert body["new_alerts"] is not None
 
 
+def test_dashboard_updates_includes_demo_run(client, db_session) -> None:
+    """Regression: dashboard must serialize demo state once a run exists.
+
+    ``latest_run`` returns a ``DemoRunState`` dataclass; the response schema
+    requires ``DemoRunResponse``. Passing the dataclass through raised a 500.
+    """
+    start = client.post(
+        "/api/demo/start",
+        json={"scenario": "unresolved_refund_riya", "interval_seconds": 60},
+    )
+    assert start.status_code == 200
+    run_id = start.json()["run_id"]
+
+    response = client.get("/api/dashboard/updates")
+    assert response.status_code == 200
+    demo = response.json()["demo"]
+    assert demo is not None
+    assert demo["run_id"] == run_id
+    assert demo["total_steps"] == 6
+
+
+def test_dashboard_updates_without_demo_run(client) -> None:
+    """Dashboard polling works before the scenario has been started."""
+    response = client.get("/api/dashboard/updates")
+    assert response.status_code == 200
+    assert response.json()["demo"] is None
+
+
 def test_demo_start_and_status_via_api(client, db_session) -> None:
     start = client.post(
         "/api/demo/start",

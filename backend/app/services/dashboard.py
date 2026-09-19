@@ -11,7 +11,7 @@ from app.db.models import (
     JourneyAlert,
     MatchDecision,
 )
-from app.schemas.demo import DashboardEventOut, DashboardUpdatesResponse
+from app.schemas.demo import DashboardEventOut, DashboardUpdatesResponse, DemoRunResponse
 from app.schemas.profiles import AlertOut
 from app.services.demo import latest_run
 
@@ -84,7 +84,19 @@ def dashboard_updates(db: Session, since: datetime | None) -> DashboardUpdatesRe
         or 0
     )
 
-    demo = latest_run(db)
+    run = latest_run(db)
+    demo = (
+        DemoRunResponse(
+            run_id=run.run_id,
+            status=run.status,
+            current_step=run.current_step,
+            total_steps=run.total_steps,
+            last_event_id=run.last_event_id,
+            error=run.error,
+        )
+        if run is not None
+        else None
+    )
     return DashboardUpdatesResponse(
         events=events,
         new_alerts=alerts,
