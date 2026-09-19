@@ -215,7 +215,7 @@ Required automated proofs:
 | Order | Task | Primary files | Exit condition |
 |---:|---|---|---|
 | 1 | Run the clean-reset composition/clock audit and freeze the exact safe summary examples. | `backend/tests/`, local diagnostic | Done: aggregate audit and list-safety test added; current local composition recorded above. |
-| 2 | Add the bounded `contact_reason` normalization/accessor and its migration only if a typed column is chosen. | normalizer, models/migration, tests | Recognized notes are normalized; raw notes remain preserved and unexposed. |
+| 2 | Add the bounded `contact_reason` normalization/accessor and its migration only if a typed column is chosen. | normalizer, canonical JSON attributes, API tests | Done: `refund_not_received`, `return_status`, and `other` are stored as typed canonical JSON; raw notes remain immutable and are not copied forward. |
 | 3 | Add the pure shared event-presentation mapper and unit tests. | `app/services/event_presentation.py` | Mapping table and null/error behavior pass without a database. |
 | 4 | Add additive pipeline schema fields and use the mapper from the one read-model seam. | `schemas/pipeline.py`, `services/pipeline_read_model.py`, route tests | Overview, list, updates, and detail agree on one summary. |
 | 5 | Update the pipeline table and inspector hierarchy. | `frontend/components/pipeline/` | Occurred time and specific safe narrative are visible; UUID column is removed from the default table. |

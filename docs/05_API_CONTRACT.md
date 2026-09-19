@@ -1,9 +1,9 @@
 # JourneyLens API Contract
 
-**Version:** 1.2 — Phase 0 / Gate G1 frozen
+**Version:** 1.3 — Phase 0 / Gate G1 frozen
 **Base path:** `/api`  
 **Format:** JSON unless documented otherwise  
-**Change note (v1.1 → v1.2):** additive Data Pipeline event-list, inspector, and polling contracts; no frozen ingestion, identity, or journey endpoint changes.
+**Change note (v1.2 → v1.3):** canonical support-note context is now a bounded, additive `contact_reason` value; raw source payloads remain unchanged.
 
 ## 1. API conventions
 
@@ -40,6 +40,16 @@ A duplicate is an API response status, not a persisted processing state.
 product_viewed | app_login | order_placed | return_requested |
 support_contacted | store_visited | refund_completed
 ```
+
+### Contact reason (canonical support context)
+
+```text
+refund_not_received | return_status | other
+```
+
+This value is only present in canonical `attributes.contact_reason` for a
+`support_contacted` event that supplied `attributes.notes`. It is intended for
+safe, typed presentation; it is not a free-text field.
 
 ### Identity outcome (Gate G2+)
 
@@ -106,6 +116,11 @@ Normalization rules:
 - `order_id`: trim and uppercase; spaces/underscores become hyphens.
 - `occurred_at`: converted to UTC.
 - Other identifier values: trimmed.
+- For `support_contacted`, the raw `attributes.notes` value remains in the raw
+  payload but is not copied to canonical attributes. The exact normalized
+  phrases `refund not received` and `second follow-up` become
+  `contact_reason: refund_not_received` and `contact_reason: return_status`.
+  Any other supplied note becomes `contact_reason: other`.
 
 ### Error response
 

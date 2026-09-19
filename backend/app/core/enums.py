@@ -30,6 +30,14 @@ class EventType(StrEnum):
     REFUND_COMPLETED = "refund_completed"
 
 
+class ContactReason(StrEnum):
+    """Bounded, list-safe context normalized from support source notes."""
+
+    REFUND_NOT_RECEIVED = "refund_not_received"
+    RETURN_STATUS = "return_status"
+    OTHER = "other"
+
+
 class IdentityOutcome(StrEnum):
     """Identity decision for a canonical event (Gate G2+)."""
 

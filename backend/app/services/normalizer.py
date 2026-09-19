@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from app.core.enums import Channel, EventType
+from app.core.enums import Channel, ContactReason, EventType
 from app.core.errors import NormalizationError
 from app.schemas.events import EventIngestionRequest, IdentifierRef
 
@@ -68,6 +68,11 @@ _IDENTIFIER_NORMALIZERS: dict[str, Callable[[str], str]] = {
     "device_id": normalize_device_id,
     "session_id": normalize_session_id,
     "customer_id": normalize_customer_id,
+}
+
+_CONTACT_REASON_BY_NOTE: dict[str, ContactReason] = {
+    "refund not received": ContactReason.REFUND_NOT_RECEIVED,
+    "second follow-up": ContactReason.RETURN_STATUS,
 }
 
 
@@ -165,5 +170,23 @@ def normalize_for_channel(envelope: EventIngestionRequest) -> NormalizedEvent:
         occurred_at=occurred_at,
         identifiers=identifiers,
         entity_references=adapter.normalize_references(envelope.entity_references),
-        attributes=dict(envelope.attributes),
+        attributes=normalize_attributes(envelope.event_type, envelope.attributes),
     )
+
+
+def normalize_attributes(event_type: EventType, attributes: dict[str, Any]) -> dict[str, Any]:
+    """Keep source attributes except support notes, which become a bounded value."""
+    normalized = dict(attributes)
+    if event_type != EventType.SUPPORT_CONTACTED:
+        return normalized
+
+    note = normalized.pop("notes", None)
+    if note is not None:
+        normalized["contact_reason"] = normalize_contact_reason(note).value
+    return normalized
+
+
+def normalize_contact_reason(value: Any) -> ContactReason:
+    """Map a source note to the small safe support-context vocabulary."""
+    normalized = value.strip().lower() if isinstance(value, str) else ""
+    return _CONTACT_REASON_BY_NOTE.get(normalized, ContactReason.OTHER)

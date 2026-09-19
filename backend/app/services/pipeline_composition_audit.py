@@ -14,10 +14,14 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.enums import EventType
+from app.core.enums import ContactReason, EventType
 from app.db.models import CanonicalEvent, RawEvent
 
 _RECOGNIZED_SUPPORT_NOTES = {"refund not received", "second follow-up"}
+_RECOGNIZED_CONTACT_REASONS = {
+    ContactReason.REFUND_NOT_RECEIVED.value,
+    ContactReason.RETURN_STATUS.value,
+}
 
 
 @dataclass(frozen=True)
@@ -104,6 +108,9 @@ def _has_order_reference(event: CanonicalEvent) -> bool:
 def _has_recognized_support_context(event: CanonicalEvent) -> bool:
     if event.event_type != EventType.SUPPORT_CONTACTED:
         return False
+    contact_reason = event.attributes.get("contact_reason")
+    if contact_reason in _RECOGNIZED_CONTACT_REASONS:
+        return True
     note = event.attributes.get("notes")
     return isinstance(note, str) and note.strip().lower() in _RECOGNIZED_SUPPORT_NOTES
 

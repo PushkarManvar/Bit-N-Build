@@ -92,3 +92,28 @@ def test_physical_store_channel_normalizes() -> None:
     event.channel = Channel.PHYSICAL_STORE
     normalized = normalize_for_channel(event)
     assert normalized.channel == Channel.PHYSICAL_STORE
+
+
+def test_support_notes_become_bounded_contact_reason() -> None:
+    event = EventIngestionRequest(
+        source_event_id="CALL-204-01",
+        channel=Channel.CALL_CENTER,
+        event_type=EventType.SUPPORT_CONTACTED,
+        occurred_at=datetime(2026, 9, 20, 12, 0, tzinfo=UTC),
+        schema_version="1.0",
+        identifiers=[],
+        entity_references={"order_id": "ord 204"},
+        attributes={"customer_name": "Riya Shah", "notes": " Refund not received "},
+    )
+
+    normalized = normalize_for_channel(event)
+
+    assert normalized.attributes == {
+        "customer_name": "Riya Shah",
+        "contact_reason": "refund_not_received",
+    }
+
+    other = event.model_copy(
+        update={"source_event_id": "CALL-204-02", "attributes": {"notes": "Call me ASAP"}}
+    )
+    assert normalize_for_channel(other).attributes == {"contact_reason": "other"}
