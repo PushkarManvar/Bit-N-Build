@@ -33,7 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main content column */}
       <div className="flex-1 flex flex-col lg:pl-60 min-w-0">
         <TopBar onToggleMobileNav={() => setMobileNavOpen(true)} />
-        <main className="flex-1 pt-16 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 w-full pt-16 p-4 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>

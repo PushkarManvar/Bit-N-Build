@@ -1,4 +1,6 @@
-﻿import React from "react";
+import React from "react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "./Button";
 
 interface ErrorBannerProps {
   title?: string;
@@ -15,34 +17,31 @@ export function ErrorBanner({
 }: ErrorBannerProps) {
   return (
     <div
-      style={{
-        padding: "1rem 1.25rem",
-        backgroundColor: "var(--color-danger-subtle)",
-        border: "1px solid var(--color-danger-border)",
-        borderRadius: "var(--radius-md)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "1rem",
-        marginBottom: "1rem",
-      }}
+      className="mb-4 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
       role="alert"
     >
-      <div>
-        <div style={{ fontWeight: 600, color: "var(--color-danger)", marginBottom: "0.2rem" }}>
-          ⚠️ {title} {stage ? `(${stage})` : ""}
+      <div className="flex gap-3">
+        <AlertTriangle
+          className="mt-0.5 h-5 w-5 shrink-0 text-red-700"
+          aria-hidden="true"
+        />
+        <div>
+          <div className="font-semibold text-red-800">
+            {title} {stage ? `(${stage})` : ""}
+          </div>
+          <div className="mt-0.5 text-sm text-red-700">{message}</div>
         </div>
-        <div style={{ fontSize: "13px", color: "#991b1b" }}>{message}</div>
       </div>
       {onRetry && (
-        <button
+        <Button
           type="button"
-          className="btn btn-danger btn-sm"
+          variant="danger"
+          size="sm"
+          icon={<RefreshCw className="h-3.5 w-3.5" />}
           onClick={onRetry}
-          style={{ whiteSpace: "nowrap" }}
         >
           Retry
-        </button>
+        </Button>
       )}
     </div>
   );
