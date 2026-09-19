@@ -58,7 +58,8 @@ export function SideNav({ onCloseMobileNav }: SideNavProps) {
       label: "Review Queue",
       href: "/reviews",
       icon: GitPullRequest,
-      badge: pendingCount !== null && pendingCount > 0 ? pendingCount : undefined,
+      badge:
+        pendingCount !== null && pendingCount > 0 ? pendingCount : undefined,
     },
     {
       label: "Demo Controller",
@@ -73,24 +74,24 @@ export function SideNav({ onCloseMobileNav }: SideNavProps) {
   ];
 
   return (
-    <aside className="w-60 h-full bg-[#172554] text-white flex flex-col justify-between select-none">
+    <aside className="flex h-full w-60 select-none flex-col justify-between bg-white text-slate-700">
       <div>
         {/* Brand header */}
-        <div className="h-16 flex items-center px-5 border-b border-blue-900/60">
+        <div className="flex h-16 items-center border-b border-[#E9E7FF] px-5">
           <Link
             href="/customers"
-            className="flex items-center gap-2.5 font-bold text-base tracking-tight text-white hover:text-blue-200 transition-colors"
+            className="flex items-center gap-2.5 text-base font-bold tracking-tight text-[#172554] transition-colors hover:text-indigo-700"
             onClick={onCloseMobileNav}
           >
-            <div className="w-8 h-8 rounded-lg bg-[#4F46E5] flex items-center justify-center text-white shadow-sm">
-              <Compass className="w-5 h-5" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#5146E5] text-white shadow-sm">
+              <Compass className="h-5 w-5" aria-hidden="true" />
             </div>
             <span>JourneyLens</span>
           </Link>
         </div>
 
         {/* Navigation list */}
-        <nav className="p-3 space-y-1" aria-label="Main Navigation">
+        <nav className="space-y-1 px-3 py-5" aria-label="Main Navigation">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -102,19 +103,19 @@ export function SideNav({ onCloseMobileNav }: SideNavProps) {
                 key={item.href}
                 href={item.href}
                 onClick={onCloseMobileNav}
-                className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                className={`flex items-center justify-between rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${
                   isActive
-                    ? "bg-[#4F46E5] text-white font-semibold shadow-xs"
-                    : "text-blue-100/80 hover:bg-white/10 hover:text-white"
+                    ? "bg-[#F0EFFF] font-semibold text-[#5B52E8]"
+                    : "text-slate-600 hover:bg-[#F7F6FF] hover:text-[#312E81]"
                 }`}
                 aria-current={isActive ? "page" : undefined}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                   <span>{item.label}</span>
                 </div>
                 {item.badge !== undefined && (
-                  <span className="px-2 py-0.5 text-[11px] font-bold bg-[#D97706] text-white rounded-full">
+                  <span className="rounded-full bg-[#FDE2E1] px-2 py-0.5 text-[11px] font-bold text-[#B42318]">
                     {item.badge}
                   </span>
                 )}
@@ -125,9 +126,17 @@ export function SideNav({ onCloseMobileNav }: SideNavProps) {
       </div>
 
       {/* Footer / version info */}
-      <div className="p-4 border-t border-blue-900/60 text-xs text-blue-200/60">
-        <div className="font-medium text-blue-200">JourneyLens Operations</div>
-        <div className="text-[11px] text-blue-300/60 mt-0.5">Flagship: Riya / ORD-204</div>
+      <div className="m-3 rounded-xl border border-[#E9E7FF] bg-[#F7F6FF] p-3 text-xs text-slate-600">
+        <div className="flex items-center justify-between gap-2">
+          <div className="font-semibold text-[#312E81]">Demo workspace</div>
+          <span
+            className="h-2.5 w-2.5 rounded-full bg-teal-500"
+            aria-label="Connected"
+          />
+        </div>
+        <div className="mt-1 text-[11px] text-slate-500">
+          Riya / ORD-204 scenario
+        </div>
       </div>
     </aside>
   );

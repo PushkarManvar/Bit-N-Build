@@ -21,32 +21,37 @@ export function TopBar({ onToggleMobileNav }: TopBarProps) {
   };
 
   return (
-    <header className="h-16 fixed top-0 right-0 left-0 lg:left-60 bg-white border-b border-[#E4E7EC] z-20 flex items-center justify-between px-4 sm:px-6 shadow-2xs">
-      <div className="flex items-center gap-3 flex-1 max-w-lg">
+    <header className="fixed top-0 right-0 left-0 z-20 flex h-16 items-center justify-between border-b border-[#E9E7FF] bg-white/95 px-4 shadow-2xs backdrop-blur lg:left-60 sm:px-6">
+      <div className="flex max-w-xl flex-1 items-center gap-3">
         {onToggleMobileNav && (
           <button
             type="button"
             onClick={onToggleMobileNav}
-            className="lg:hidden p-2 text-[#667085] hover:text-[#1E293B] hover:bg-slate-100 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+            className="rounded-md p-2 text-[#667085] transition-colors hover:bg-slate-100 hover:text-[#1E293B] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5] lg:hidden"
             aria-label="Toggle navigation"
           >
             <Menu className="w-5 h-5" />
           </button>
         )}
 
-        <form onSubmit={handleSearch} className="w-full relative">
+        <form onSubmit={handleSearch} className="relative w-full">
           <label htmlFor="global-search" className="sr-only">
             Search customers or order ID
           </label>
           <div className="relative">
-            <Search className="w-4 h-4 text-[#667085] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search
+              className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#667085]"
+              aria-hidden="true"
+            />
             <input
               id="global-search"
               type="search"
-              placeholder="Search customer name, email, phone, or ORD-204..."
+              name="query"
+              autoComplete="off"
+              placeholder="Search customer name, email, phone, or ORD-204…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 text-xs sm:text-sm bg-[#F6F8FB] border border-[#D0D5DD] rounded-md text-[#1E293B] placeholder-[#667085] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+              className="w-full rounded-md border border-[#D0D5DD] bg-[#FAFAFF] py-1.5 pr-4 pl-9 text-xs text-[#1E293B] placeholder-[#667085] transition-colors focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5] sm:text-sm"
             />
           </div>
         </form>

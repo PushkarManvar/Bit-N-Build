@@ -8,9 +8,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F6F8FB] flex">
+    <div className="min-h-screen bg-[#FBFAFF] flex">
+      <a
+        href="#main-content"
+        className="sr-only fixed left-4 top-4 z-[60] rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white focus:not-sr-only focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+      >
+        Skip to main content
+      </a>
       {/* Desktop fixed sidebar (240px = w-60) */}
-      <div className="hidden lg:block fixed inset-y-0 left-0 w-60 z-30 shadow-md">
+      <div className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-[#E9E7FF] bg-white lg:block">
         <SideNav />
       </div>
 
@@ -22,7 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           aria-hidden="true"
         >
           <div
-            className="fixed inset-y-0 left-0 w-64 z-50 bg-[#172554] shadow-xl"
+            className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <SideNav onCloseMobileNav={() => setMobileNavOpen(false)} />
@@ -31,9 +37,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Main content column */}
-      <div className="flex-1 flex flex-col lg:pl-60 min-w-0">
+      <div className="min-w-0 flex-1 flex flex-col lg:pl-60">
         <TopBar onToggleMobileNav={() => setMobileNavOpen(true)} />
-        <main className="flex-1 w-full pt-16 p-4 sm:p-6 lg:p-8">
+        <main
+          id="main-content"
+          className="w-full flex-1 p-4 pt-16 sm:p-6 sm:pt-16 lg:p-8 lg:pt-16"
+        >
           {children}
         </main>
       </div>
