@@ -277,6 +277,8 @@ export async function getDemoStatus(
   return handleResponse<DemoRunResponse>(response);
 }
 
+export const getDemoRun = getDemoStatus;
+
 export async function resetDemo(signal?: AbortSignal): Promise<DemoResetResponse> {
   const baseUrl = getBaseUrl();
   const response = await fetch(`${baseUrl}/api/demo/reset`, {

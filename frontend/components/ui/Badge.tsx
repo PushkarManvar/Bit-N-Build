@@ -145,3 +145,5 @@ export function ProcessingStatusBadge({
     </span>
   );
 }
+
+export const IdentityBadge = IdentityOutcomeBadge;
