@@ -1,0 +1,34 @@
+name: Feature request
+description: Propose a scoped JourneyLens improvement
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Describe the problem before proposing a solution.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Proposed scope
+      description: Explain why this belongs in the MVP, near-term backlog, or future work.
+    validations:
+      required: true
+  - type: checkboxes
+    id: guardrails
+    attributes:
+      label: Guardrails
+      options:
+        - label: This does not introduce name-only auto-merging.
+          required: true
+        - label: This does not require real customer data for the MVP.
+          required: true

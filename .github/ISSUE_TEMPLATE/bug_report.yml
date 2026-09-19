@@ -1,0 +1,45 @@
+name: Bug report
+description: Report a reproducible JourneyLens defect
+title: "bug: "
+labels: [bug]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start the stack...
+        2. Ingest event...
+        3. Open page...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: safety
+    attributes:
+      label: Identity safety impact
+      options:
+        - None known
+        - Incorrect merge
+        - Missed match
+        - Conflict not routed to review
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Docker version, branch, and commit
