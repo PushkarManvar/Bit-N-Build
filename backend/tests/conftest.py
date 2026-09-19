@@ -13,6 +13,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.db import models  # noqa: F401  (register all models on Base.metadata)
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
@@ -72,3 +73,28 @@ def web_invalid_missing_timestamp() -> dict:
 @pytest.fixture()
 def riya_web_canonical_expected() -> dict:
     return load_fixture("expected/g1/riya_web_canonical.json")
+
+
+@pytest.fixture()
+def riya_web_anonymous() -> dict:
+    return load_fixture("fixtures/g2/riya_web_anonymous.json")
+
+
+@pytest.fixture()
+def riya_mobile_status() -> dict:
+    return load_fixture("fixtures/g2/riya_mobile_status.json")
+
+
+@pytest.fixture()
+def aarav_name_only() -> dict:
+    return load_fixture("fixtures/g2/aarav_name_only.json")
+
+
+@pytest.fixture()
+def id04_device_only() -> dict:
+    return load_fixture("fixtures/g2/id04_device_only.json")
+
+
+@pytest.fixture()
+def id04_email_plus_device() -> dict:
+    return load_fixture("fixtures/g2/id04_email_plus_device.json")

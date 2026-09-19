@@ -105,8 +105,26 @@ WEB_ADAPTER = ChannelAdapter(
     reference_normalizers={"order_id": normalize_order_id},
 )
 
+MOBILE_APP_ADAPTER = ChannelAdapter(
+    identifier_types={"email", "phone", "device_id", "session_id", "customer_id"},
+    reference_normalizers={"order_id": normalize_order_id},
+)
+
+CALL_CENTER_ADAPTER = ChannelAdapter(
+    identifier_types={"email", "phone", "device_id", "session_id", "customer_id"},
+    reference_normalizers={"order_id": normalize_order_id},
+)
+
+PHYSICAL_STORE_ADAPTER = ChannelAdapter(
+    identifier_types={"email", "phone", "device_id", "session_id", "customer_id"},
+    reference_normalizers={"order_id": normalize_order_id},
+)
+
 CHANNEL_ADAPTERS: dict[Channel, ChannelAdapter] = {
     Channel.WEB: WEB_ADAPTER,
+    Channel.MOBILE_APP: MOBILE_APP_ADAPTER,
+    Channel.CALL_CENTER: CALL_CENTER_ADAPTER,
+    Channel.PHYSICAL_STORE: PHYSICAL_STORE_ADAPTER,
 }
 
 

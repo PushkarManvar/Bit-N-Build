@@ -1,8 +1,8 @@
-"""Event ingestion orchestration for Gate G1.
+"""Event ingestion orchestration for Gate G1 and G2.
 
-Flow (docs/00_START_HERE.md G1):
+Flow:
 POST /api/events -> validate -> duplicate check -> save raw ->
-normalize -> save canonical -> respond.
+normalize -> resolve identity -> save canonical + decision -> respond.
 
 Raw persistence always happens before normalization so failures are
 recoverable. The (channel, source_event_id) pair is the idempotency key.
@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.enums import ProcessingStatus
+from app.core.enums import IdentityOutcome, ProcessingStatus
 from app.core.errors import EventConflictError, NormalizationError
 from app.db.models import CanonicalEvent, RawEvent
 from app.schemas.events import (
@@ -27,7 +27,15 @@ from app.schemas.events import (
     EventRetrievalResponse,
     RawEventDetail,
 )
+from app.services.candidate_retriever import retrieve_candidates
+from app.services.identity_resolver import DecisionResult, decide
 from app.services.normalizer import NormalizedEvent, normalize_for_channel
+from app.services.profile_service import (
+    apply_auto_link,
+    apply_new_profile,
+    apply_review_required,
+    get_profile,
+)
 
 
 @dataclass(frozen=True)
@@ -115,6 +123,7 @@ def ingest_event(db: Session, envelope: EventIngestionRequest) -> IngestionResul
         )
 
     canonical = _persist_canonical(db, raw, normalized)
+    decision, resolved_profile_id = _resolve_identity(db, canonical, normalized)
     raw.processing_status = ProcessingStatus.NORMALIZED
     db.commit()
 
@@ -127,9 +136,32 @@ def ingest_event(db: Session, envelope: EventIngestionRequest) -> IngestionResul
             occurred_at=normalized.occurred_at,
             processing_status=ProcessingStatus.NORMALIZED,
             duplicate=False,
+            match_decision=decision.outcome,
+            profile_id=resolved_profile_id,
+            match_score=decision.score,
         ),
         http_status=201,
     )
+
+
+def _resolve_identity(
+    db: Session,
+    canonical: CanonicalEvent,
+    normalized: NormalizedEvent,
+) -> tuple[DecisionResult, str | None]:
+    retrieval = retrieve_candidates(db, normalized)
+    decision = decide(normalized, retrieval.candidates, retrieval.field_profile_map)
+    if decision.outcome == IdentityOutcome.NEW_PROFILE:
+        profile = apply_new_profile(db, canonical, normalized, decision)
+        return decision, str(profile.id)
+    if decision.outcome == IdentityOutcome.AUTO_LINKED:
+        profile = get_profile(db, decision.selected_profile_id)
+        if profile is None:
+            raise RuntimeError("Auto-link selected a missing profile.")
+        apply_auto_link(db, canonical, normalized, decision, profile)
+        return decision, str(profile.id)
+    apply_review_required(db, canonical, decision)
+    return decision, None
 
 
 def _persist_canonical(
