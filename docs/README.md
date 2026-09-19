@@ -20,6 +20,7 @@ Read these documents in order when joining the project:
 | 14 | `12_STITCH_FRONTEND_IMPLEMENTATION_GUIDE.md` | Screen-by-screen frontend plan reconciled with the live backend contract |
 | 15 | `13_REVIEW_QUEUE_DATA_VARIETY_PLAN.md` | Planned backend/data work for a small, varied, truthful Review Queue |
 | 16 | `14_CUSTOMER_AND_JOURNEY_DATA_VARIETY_PLAN.md` | Planned backend/data work for varied, truthful customer and journey views |
+| 17 | `15_COMMAND_CENTRE_SIGNAL_INTEGRITY_PLAN.md` | Planned backend/data work for a truthful, varied Command Centre |
 
 Repository-level instructions:
 
