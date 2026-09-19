@@ -206,3 +206,20 @@ class JourneyAlert(Base):
     resolved_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+
+class EvaluationRun(Base):
+    """Persisted evaluation metrics computed from hidden truth (Gate G6).
+
+    Only the evaluation script writes these; runtime matching never reads
+    hidden truth files.
+    """
+
+    __tablename__ = "evaluation_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_now_utc
+    )
+    metrics: Mapped[dict] = mapped_column(_jsonb(), nullable=False, default=dict)
+    note: Mapped[str | None] = mapped_column(String(500), nullable=True)

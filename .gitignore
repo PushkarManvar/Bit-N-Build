@@ -31,3 +31,6 @@ data/truth/*.jsonl
 
 # Local upload staging folder (duplicates live under docs/ and repo root)
 doc/
+
+# Design-tool screen captures (not part of the application)
+stitch_*/
