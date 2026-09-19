@@ -1,0 +1,24 @@
+{
+  "source_event_id": "WEB-017",
+  "channel": "web",
+  "event_type": "product_viewed",
+  "occurred_at": "2026-09-14T08:30:00Z",
+  "schema_version": "1.0",
+  "identifiers": [
+    {
+      "type": "device_id",
+      "value": " dev-17 "
+    },
+    {
+      "type": "session_id",
+      "value": " sess-1001 "
+    }
+  ],
+  "entity_references": {
+    "order_id": "ord 204"
+  },
+  "attributes": {
+    "customer_name": "Riya Shah",
+    "page": "/products/42"
+  }
+}

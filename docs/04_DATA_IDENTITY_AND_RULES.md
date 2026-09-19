@@ -6,23 +6,18 @@
 
 ## 1. Canonical event model
 
-Every source adapter must produce this logical structure:
+Every source adapter must produce this logical structure (frozen wire shape in `docs/05_API_CONTRACT.md`):
 
 | Field | Type | Required | Notes |
-|---|---|---:|---|
+|---|---|---|---:|
 | `channel` | enum | Yes | `web`, `mobile_app`, `call_center`, `physical_store` |
-| `event_type` | string | Yes | Normalized event vocabulary |
+| `event_type` | enum | Yes | Frozen `EventType` vocabulary |
 | `occurred_at` | timestamp | Yes | UTC |
-| `email` | string/null | No | Trimmed and lowercased |
-| `phone` | string/null | No | Normalized E.164-style value |
-| `device_id` | string/null | No | Stable source device token |
-| `session_id` | string/null | No | Short-lived browsing/app session |
-| `customer_id` | string/null | No | Source account identifier |
-| `order_id` | string/null | No | Uppercase normalized reference |
-| `issue_id` | string/null | No | Ticket/RMA/return reference |
-| `customer_name` | string/null | No | Whitespace-normalized name |
-| `city` | string/null | No | Lowercase normalized city |
-| `attributes` | JSON object | Yes | Unmapped source fields |
+| `identifiers` | array of `{type, value}` | Yes | Normalized strong/moderate identifiers |
+| `entity_references` | object | Yes | e.g. `order_id`; uppercase normalized |
+| `attributes` | JSON object | Yes | Free-form source fields, e.g. `customer_name`, `city` |
+
+Identifier types (frozen): `email`, `phone`, `device_id`, `session_id`, `customer_id`. Order references live in `entity_references.order_id` and are treated as a strong identifier for matching.
 
 ## 2. Source mappings
 
@@ -256,7 +251,7 @@ Name similarity may retrieve or rank candidates. It may never produce `auto_link
 | Riya support call | phone + `ORD-204` | Auto-link |
 | Riya store return | phone + `ORD-204` | Auto-link |
 | Aarav with same name/city only | weak name/city | Review or new profile; never auto-link |
-| Email points to A, phone to B | strong conflict | Manual review |
+| Email points to A, phone to B | strong conflict | manual review |
 
 ## 10. Journey rules
 
@@ -333,9 +328,9 @@ Truth IDs must never be accepted by ingestion or exposed in normal UI responses.
 | ID-04 | Same device then verified email | Anonymous event joins known profile |
 | ID-05 | Same name only | No auto-link |
 | ID-06 | Same name and city only | Review or new profile |
-| ID-07 | Email/phone point to different profiles | Manual review |
+| ID-07 | Email/phone point to different profiles | manual review |
 | ID-08 | Duplicate source record | Existing result returned |
-| ID-09 | Top candidates nearly tied | Manual review |
+| ID-09 | Top candidates nearly tied | manual review |
 | JR-01 | Return + two contacts + no completion | One unresolved alert |
 | JR-02 | Add refund completion | No new unresolved alert; existing state resolved if implemented |
 | JR-03 | Run analyzer twice | No duplicate open alert |

@@ -188,9 +188,14 @@ Stable error codes:
   "event_type": "product_viewed",
   "occurred_at": "2026-09-19T08:30:00Z",
   "processing_status": "normalized",
-  "duplicate": false
+  "duplicate": false,
+  "match_decision": "new_profile",
+  "profile_id": "uuid",
+  "match_score": 0
 }
 ```
+
+**Additive fields (Gate G2):** `match_decision` (`auto_linked | review_required | new_profile`), `profile_id`, and `match_score` are present on successful `201` ingestion responses. They are additive and do not change any G1 field. On duplicate (`200`) and normalization-failure (`202`) responses they are omitted.
 
 `200 OK` — idempotent duplicate (same source ID + identical payload; no new rows):
 
@@ -429,7 +434,7 @@ Stable error codes:
       "best_candidate": {
         "profile_id": "uuid",
         "display_name": "Aarav Patel",
-        "score": 25
+        "score": 55
       },
       "evidence": ["Similar name", "Same city"],
       "conflicts": [],
@@ -447,17 +452,17 @@ Stable error codes:
 
 ```json
 {
-  "action": "create_new_profile",
+  "action": "create_profile",
   "selected_profile_id": null,
   "reviewer_name": "Demo Reviewer",
   "note": "Same name, but no shared strong identifier."
 }
 ```
 
-Allowed actions:
+Allowed actions (frozen review decisions):
 
 ```text
-approve_match | reject_match | create_new_profile
+approve_link | reject_link | create_profile
 ```
 
 #### Response
@@ -466,7 +471,7 @@ approve_match | reject_match | create_new_profile
 {
   "match_decision_id": "uuid",
   "review_status": "approved",
-  "action": "create_new_profile",
+  "action": "create_profile",
   "profile_id": "new-profile-uuid",
   "resolved_at": "2026-09-19T10:00:00Z"
 }

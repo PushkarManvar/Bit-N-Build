@@ -1,0 +1,13 @@
+{
+  "source_event_id": "WEB-031",
+  "channel": "web",
+  "event_type": "product_viewed",
+  "occurred_at": "2026-09-18T10:30:00Z",
+  "schema_version": "1.0",
+  "identifiers": [],
+  "entity_references": {},
+  "attributes": {
+    "customer_name": "Aarav Patel",
+    "city": "Mumbai"
+  }
+}

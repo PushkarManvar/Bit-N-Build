@@ -3,17 +3,21 @@
 HTTP concerns only; processing lives in app.services.event_ingestion.
 """
 
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.db.models import CanonicalEvent, MatchDecision, RawEvent
 from app.db.session import get_db
 from app.schemas.events import (
     EventIngestionRequest,
     EventIngestionResponse,
     EventRetrievalResponse,
 )
+from app.schemas.match import EventContext, MatchExplanationResponse
 from app.services.event_ingestion import ingest_event, retrieve_event
 
 router = APIRouter()
@@ -30,7 +34,7 @@ def create_event(
     response: Response,
     db: DbSession,
 ) -> EventIngestionResponse:
-    """Ingest one channel event: validate, save raw, normalize, save canonical.
+    """Ingest one channel event: validate, save raw, normalize, resolve, save.
 
     Status codes: 201 new, 200 idempotent duplicate, 202 normalization failed.
     """
@@ -52,3 +56,55 @@ def get_event(
     if result is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return result
+
+
+@router.get(
+    "/events/{canonical_event_id}/match-explanation",
+    response_model=MatchExplanationResponse,
+)
+def get_match_explanation(
+    canonical_event_id: str,
+    db: DbSession,
+) -> MatchExplanationResponse:
+    """Explainable identity decision for a canonical event (Gate G2)."""
+    try:
+        event_uuid = uuid.UUID(canonical_event_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Match decision not found") from None
+    decision = db.scalar(
+        select(MatchDecision).where(MatchDecision.canonical_event_id == event_uuid)
+    )
+    if decision is None:
+        raise HTTPException(status_code=404, detail="Match decision not found")
+
+    canonical = db.get(CanonicalEvent, event_uuid)
+    if canonical is None:
+        raise HTTPException(status_code=404, detail="Canonical event not found")
+
+    raw = db.get(RawEvent, canonical.raw_event_id)
+    alternatives = [
+        candidate
+        for candidate in decision.candidates
+        if candidate.get("profile_id") != decision.profile_id
+    ]
+    return MatchExplanationResponse(
+        event_id=str(canonical.id),
+        event_context=EventContext(
+            channel=canonical.channel,
+            event_type=canonical.event_type,
+            occurred_at=canonical.occurred_at,
+        ),
+        decision=decision.outcome,
+        selected_profile_id=str(decision.profile_id) if decision.profile_id else None,
+        score=decision.score,
+        thresholds=decision.thresholds,
+        evidence=decision.evidence,
+        conflicts=decision.conflicts,
+        alternative_candidates=alternatives,
+        raw_payload=raw.payload if raw else {},
+        normalized_fields={
+            "identifiers": canonical.identifiers,
+            "entity_references": canonical.entity_references,
+            "attributes": canonical.attributes,
+        },
+    )

@@ -1,0 +1,15 @@
+{
+  "source_event_id": "WEB-041",
+  "channel": "web",
+  "event_type": "app_login",
+  "occurred_at": "2026-09-14T10:00:00Z",
+  "schema_version": "1.0",
+  "identifiers": [
+    {
+      "type": "device_id",
+      "value": "dev-77"
+    }
+  ],
+  "entity_references": {},
+  "attributes": {}
+}

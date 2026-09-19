@@ -1,17 +1,16 @@
 """Database models for Gate G1: raw_events and canonical_events.
 
-Only the tables required by Gate G1 are created here. Profiles, identifiers,
-match decisions, and alerts arrive with their own gates.
+Gate G2 adds customer_profiles, profile_identifiers, and match_decisions.
 """
 
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, DateTime, Enum, ForeignKey, String, UniqueConstraint, Uuid
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint, Uuid
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.enums import Channel, EventType, ProcessingStatus
+from app.core.enums import Channel, EventType, IdentityOutcome, ProcessingStatus
 from app.db.base import Base
 
 
@@ -71,6 +70,69 @@ class CanonicalEvent(Base):
     identifiers: Mapped[list[dict]] = mapped_column(_jsonb(), nullable=False, default=list)
     entity_references: Mapped[dict] = mapped_column(_jsonb(), nullable=False, default=dict)
     attributes: Mapped[dict] = mapped_column(_jsonb(), nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_now_utc
+    )
+
+
+class CustomerProfile(Base):
+    """A resolved customer. Owns identifiers; events link to it."""
+
+    __tablename__ = "customer_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    display_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_now_utc
+    )
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ProfileIdentifier(Base):
+    """A single normalized identifier owned by one profile.
+
+    ``(type, value)`` is globally unique: the same normalized identifier
+    always resolves to the same profile.
+    """
+
+    __tablename__ = "profile_identifiers"
+    __table_args__ = (
+        UniqueConstraint("type", "value", name="uq_profile_identifiers_type_value"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("customer_profiles.id"), nullable=False, index=True
+    )
+    type: Mapped[str] = mapped_column(String(50), nullable=False)
+    value: Mapped[str] = mapped_column(String(200), nullable=False)
+    first_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_now_utc
+    )
+
+
+class MatchDecision(Base):
+    """Explainable identity decision for one canonical event."""
+
+    __tablename__ = "match_decisions"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    canonical_event_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("canonical_events.id"), unique=True, nullable=False
+    )
+    profile_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("customer_profiles.id"), nullable=True
+    )
+    outcome: Mapped[IdentityOutcome] = mapped_column(
+        Enum(IdentityOutcome, native_enum=False), nullable=False
+    )
+    score: Mapped[int] = mapped_column(Integer, nullable=False)
+    thresholds: Mapped[dict] = mapped_column(_jsonb(), nullable=False, default=dict)
+    evidence: Mapped[list[dict]] = mapped_column(_jsonb(), nullable=False, default=list)
+    conflicts: Mapped[list[dict]] = mapped_column(_jsonb(), nullable=False, default=list)
+    candidates: Mapped[list[dict]] = mapped_column(_jsonb(), nullable=False, default=list)
+    decision_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_now_utc
     )

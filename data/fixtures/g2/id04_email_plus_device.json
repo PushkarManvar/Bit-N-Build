@@ -1,0 +1,19 @@
+{
+  "source_event_id": "APP-90099",
+  "channel": "mobile_app",
+  "event_type": "support_contacted",
+  "occurred_at": "2026-09-15T10:30:00Z",
+  "schema_version": "1.0",
+  "identifiers": [
+    {
+      "type": "email",
+      "value": "PRIVA@EXAMPLE.COM"
+    },
+    {
+      "type": "device_id",
+      "value": "dev-77"
+    }
+  ],
+  "entity_references": {},
+  "attributes": {}
+}

@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from app.core.enums import Channel, EventType, ProcessingStatus
+from app.core.enums import Channel, EventType, IdentityOutcome, ProcessingStatus
 
 IdentifierType = Literal["email", "phone", "device_id", "session_id", "customer_id"]
 
@@ -39,6 +39,9 @@ class EventIngestionResponse(BaseModel):
     occurred_at: datetime | None = None
     processing_status: IngestionResponseStatus
     duplicate: bool = False
+    match_decision: IdentityOutcome | None = None
+    profile_id: str | None = None
+    match_score: int | None = None
 
 
 class RawEventDetail(BaseModel):

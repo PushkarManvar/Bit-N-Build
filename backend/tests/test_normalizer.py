@@ -87,8 +87,8 @@ def test_unsupported_schema_version_raises() -> None:
         normalize_for_channel(event)
 
 
-def test_unsupported_channel_raises() -> None:
+def test_physical_store_channel_normalizes() -> None:
     event = _web_event()
     event.channel = Channel.PHYSICAL_STORE
-    with pytest.raises(NormalizationError):
-        normalize_for_channel(event)
+    normalized = normalize_for_channel(event)
+    assert normalized.channel == Channel.PHYSICAL_STORE
