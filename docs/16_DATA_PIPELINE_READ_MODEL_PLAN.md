@@ -297,7 +297,7 @@ Each task should normally fit within two hours and end in a focused commit.
 | 8 | Add only the indexes proven useful by the final queries. | new Alembic migration, if needed | Done: PostgreSQL query-plan review found no current index worth adding. |
 | 9 | Add frontend types and request functions. | `frontend/lib/types.ts`, `frontend/lib/api.ts` | Done: strict typecheck and lint pass for overview, list, detail, and updates clients. |
 | 10 | Build stage/channel cards and the real event stream. | `components/pipeline/`, pipeline page | Done: API-backed funnel, channel totals, filters, pagination, and loading/empty/error/success states. |
-| 11 | Build the accessible inspector and ID-safe tabs. | `EventInspector.tsx` | Keyboard tab/dialog checks; raw/canonical IDs never cross. |
+| 11 | Build the accessible inspector and ID-safe tabs. | `EventInspector.tsx` | Done: real detail drawer, keyboard tabs/Escape close, and separately labelled raw/canonical IDs. |
 | 12 | Add polling, burst draining, degraded state, and stable selection. | `PipelineView.tsx` | Fake-timer polling tests and 101-event integration case. |
 | 13 | Run end-to-end verification with generated data and the Riya demo. | backend/frontend tests | Pipeline updates while the six-step demo runs; golden path unchanged. |
 

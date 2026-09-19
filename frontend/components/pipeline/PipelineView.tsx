@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Panel } from "@/components/ui/Panel";
+import { EventInspector } from "@/components/pipeline/EventInspector";
 
 const PAGE_SIZE = 25;
 
@@ -79,6 +80,7 @@ export function PipelineView() {
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<ApiClientError | null>(null);
+  const [selectedRawEventId, setSelectedRawEventId] = useState<string | null>(null);
 
   const loadOverview = useCallback(async () => {
     setLoading(true);
@@ -357,10 +359,11 @@ export function PipelineView() {
                     <th className="border-b border-[#E4E7EC] px-3 py-3">Processing</th>
                     <th className="border-b border-[#E4E7EC] px-3 py-3">Identity</th>
                     <th className="border-b border-[#E4E7EC] px-3 py-3">Profile</th>
+                    <th className="border-b border-[#E4E7EC] px-3 py-3"><span className="sr-only">Inspector</span></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {events.map((event) => <EventRow key={event.raw_event_id} event={event} />)}
+                  {events.map((event) => <EventRow key={event.raw_event_id} event={event} onInspect={setSelectedRawEventId} />)}
                 </tbody>
               </table>
             </div>
@@ -374,6 +377,7 @@ export function PipelineView() {
           </>
         )}
       </Panel>
+      <EventInspector rawEventId={selectedRawEventId} onClose={() => setSelectedRawEventId(null)} />
     </div>
   );
 }
@@ -456,7 +460,7 @@ function SelectFilter({
   );
 }
 
-function EventRow({ event }: { event: PipelineEventOut }) {
+function EventRow({ event, onInspect }: { event: PipelineEventOut; onInspect: (rawEventId: string) => void }) {
   return (
     <tr className="group hover:bg-slate-50">
       <td className="border-b border-[#EAECF0] px-3 py-3.5 text-sm text-[#475467]">{formatTimestamp(event.received_at)}</td>
@@ -471,6 +475,15 @@ function EventRow({ event }: { event: PipelineEventOut }) {
         {event.identity_outcome ? <IdentityOutcomeBadge outcome={event.identity_outcome} /> : <span className="text-sm text-[#98A2B3]">—</span>}
       </td>
       <td className="border-b border-[#EAECF0] px-3 py-3.5 font-mono text-xs text-[#475467]">{shortId(event.profile_id)}</td>
+      <td className="border-b border-[#EAECF0] px-3 py-3.5 text-right">
+        <button
+          type="button"
+          onClick={() => onInspect(event.raw_event_id)}
+          className="rounded-md px-2 py-1 text-xs font-semibold text-[#4F46E5] hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+        >
+          Inspect
+        </button>
+      </td>
     </tr>
   );
 }
