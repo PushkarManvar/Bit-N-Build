@@ -9,6 +9,7 @@ import type {
   Channel,
   EventType,
   IdentityOutcome,
+  ReviewDecision,
   ProcessingStatus,
 } from "./types";
 
@@ -165,3 +166,63 @@ export const PROCESSING_STATUS_META: Record<
     badgeBorder: "border-rose-200",
   },
 };
+
+/**
+ * Function-style presenters used by dashboard/demo views (Preet, Tasks 2/4).
+ */
+export interface PresenterInfo {
+  label: string;
+  iconName?: string;
+  badgeClass: string;
+}
+
+export function getChannelPresenter(channel: Channel | string | null | undefined): PresenterInfo {
+  switch (channel) {
+    case "web": return { label: "Website", iconName: "Globe", badgeClass: "badge-channel-web" };
+    case "mobile_app": return { label: "Mobile App", iconName: "Smartphone", badgeClass: "badge-channel-mobile_app" };
+    case "call_center": return { label: "Call Centre", iconName: "Headphones", badgeClass: "badge-channel-call_center" };
+    case "physical_store": return { label: "Physical Store", iconName: "Store", badgeClass: "badge-channel-physical_store" };
+    default: return { label: channel || "Unknown", iconName: "HelpCircle", badgeClass: "badge" };
+  }
+}
+
+export function getEventTypeLabel(eventType: EventType | string | null | undefined): string {
+  switch (eventType) {
+    case "product_viewed": return "Product viewed";
+    case "app_login": return "App login";
+    case "order_placed": return "Order placed";
+    case "return_requested": return "Return requested";
+    case "support_contacted": return "Support contacted";
+    case "store_visited": return "Store visited";
+    case "refund_completed": return "Refund completed";
+    default: return eventType ? eventType.replace(/_/g, " ") : "Event";
+  }
+}
+
+export function getIdentityOutcomePresenter(outcome: IdentityOutcome | string | null | undefined): PresenterInfo {
+  switch (outcome) {
+    case "auto_linked": return { label: "Linked automatically", badgeClass: "badge-outcome-auto_linked" };
+    case "review_required": return { label: "Needs review", badgeClass: "badge-outcome-review_required" };
+    case "new_profile": return { label: "New profile created", badgeClass: "badge-outcome-new_profile" };
+    default: return { label: outcome || "-", badgeClass: "badge" };
+  }
+}
+
+export function getSeverityPresenter(severity: AlertSeverity | string | null | undefined): PresenterInfo {
+  switch (severity) {
+    case "critical": return { label: "Critical", badgeClass: "badge-severity-critical" };
+    case "high": return { label: "High", badgeClass: "badge-severity-high" };
+    case "medium": return { label: "Medium", badgeClass: "badge-severity-medium" };
+    case "low": return { label: "Low", badgeClass: "badge-severity-low" };
+    default: return { label: severity || "Unknown", badgeClass: "badge" };
+  }
+}
+
+export function getReviewActionLabel(action: ReviewDecision | string): string {
+  switch (action) {
+    case "approve_link": return "Approve selected match";
+    case "reject_link": return "Reject this candidate";
+    case "create_profile": return "Create separate profile";
+    default: return action;
+  }
+}

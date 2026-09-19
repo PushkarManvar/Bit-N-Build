@@ -6,6 +6,8 @@ interface MetricCardProps {
   subtext?: string;
   icon?: React.ReactNode;
   className?: string;
+  sub?: string;
+  loading?: boolean;
 }
 
 export function MetricCard({
@@ -14,8 +16,11 @@ export function MetricCard({
   subtext,
   icon,
   className = "",
+  sub,
+  loading = false,
 }: MetricCardProps) {
-  const displayValue = value === null || value === undefined ? "—" : value;
+  const displayValue = loading ? "…" : value === null || value === undefined ? "—" : value;
+  const subLabel = sub ?? subtext;
 
   return (
     <div
@@ -28,8 +33,8 @@ export function MetricCard({
       <div className="text-2xl font-bold text-[#172554] tabular-nums tracking-tight">
         {displayValue}
       </div>
-      {subtext && (
-        <div className="text-xs text-[#667085] mt-1.5 font-medium">{subtext}</div>
+      {subLabel && (
+        <div className="text-xs text-[#667085] mt-1.5 font-medium">{subLabel}</div>
       )}
     </div>
   );

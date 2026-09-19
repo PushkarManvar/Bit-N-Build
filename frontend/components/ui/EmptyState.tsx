@@ -1,5 +1,6 @@
 import React from "react";
 import { Inbox } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 interface EmptyStateProps {
   title: string;
@@ -7,6 +8,8 @@ interface EmptyStateProps {
   icon?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
+  actionText?: string;
+  onAction?: () => void;
 }
 
 export function EmptyState({
@@ -15,6 +18,8 @@ export function EmptyState({
   icon,
   action,
   className = "",
+  actionText,
+  onAction,
 }: EmptyStateProps) {
   return (
     <div
@@ -25,7 +30,11 @@ export function EmptyState({
       </div>
       <h3 className="text-base font-semibold text-[#172554] mb-1">{title}</h3>
       <p className="text-sm text-[#667085] max-w-sm mb-4">{description}</p>
-      {action && <div>{action}</div>}
+      {action ?? (actionText && onAction ? (
+        <Button variant="outline" onClick={onAction}>
+          {actionText}
+        </Button>
+      ) : null)}
     </div>
   );
 }

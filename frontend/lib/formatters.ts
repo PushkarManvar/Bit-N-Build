@@ -88,3 +88,40 @@ export function formatTimeAgo(isoString: string | null | undefined): string {
     return isoString;
   }
 }
+
+/**
+ * Dashboard helpers (Preet, Tasks 2/4).
+ */
+export function shortenId(id: string | null | undefined, length = 8): string {
+  if (!id) return "-";
+  return id.length > length ? id.slice(0, length) : id;
+}
+
+export function formatRelativeTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return "-";
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diffSec < 5) return "just now";
+    if (diffSec < 60) return `${diffSec}s ago`;
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr}h ago`;
+    const diffDays = Math.floor(diffHr / 24);
+    return `${diffDays}d ago`;
+  } catch {
+    return dateStr;
+  }
+}
+
+export function formatPercent(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "-";
+  return `${(value * 100).toFixed(1)}%`;
+}
+
+export function formatMetric(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "-";
+  return value.toLocaleString();
+}
