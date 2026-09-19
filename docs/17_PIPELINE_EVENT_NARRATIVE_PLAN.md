@@ -218,7 +218,7 @@ Required automated proofs:
 | 2 | Add the bounded `contact_reason` normalization/accessor and its migration only if a typed column is chosen. | normalizer, canonical JSON attributes, API tests | Done: `refund_not_received`, `return_status`, and `other` are stored as typed canonical JSON; raw notes remain immutable and are not copied forward. |
 | 3 | Add the pure shared event-presentation mapper and unit tests. | `app/services/event_presentation.py` | Done: mapping-table narratives pass without a database; API exposure remains Task 4. |
 | 4 | Add additive pipeline schema fields and use the mapper from the one read-model seam. | `schemas/pipeline.py`, `services/pipeline_read_model.py`, route tests | Done: overview, filtered list, updates, and inspector agree on one summary and order-reference presence. |
-| 5 | Update the pipeline table and inspector hierarchy. | `frontend/components/pipeline/` | Occurred time and specific safe narrative are visible; UUID column is removed from the default table. |
+| 5 | Update the pipeline table and inspector hierarchy. | `frontend/components/pipeline/` | Done: occurred/received/processed clocks are explicit, the safe narrative is shown in the table and inspector, and the default UUID column is removed. |
 | 6 | Adjust deterministic reset ingestion order only if Task 1 proves it is needed. | `services/demo.py`, reset tests | Representative newest page; no outcome/count regression. |
 | 7 | Add browser and accessibility coverage; rerun the Riya demo. | frontend tests/demo runbook | Specific pipeline rows appear during the six-step story without raw-data leakage. |
 
