@@ -1,0 +1,79 @@
+{
+  "scenario": "unresolved_refund_riya",
+  "steps": [
+    {
+      "source_event_id": "DEMO-WEB-01",
+      "channel": "web",
+      "event_type": "product_viewed",
+      "occurred_at": "2026-09-14T08:00:00Z",
+      "schema_version": "1.0",
+      "identifiers": [
+        { "type": "device_id", "value": "DEV-17" },
+        { "type": "session_id", "value": "SESS-1001" }
+      ],
+      "entity_references": { "order_id": "ORD-204" },
+      "attributes": { "customer_name": "Riya Shah", "page": "/products/42" }
+    },
+    {
+      "source_event_id": "DEMO-APP-01",
+      "channel": "mobile_app",
+      "event_type": "support_contacted",
+      "occurred_at": "2026-09-15T09:00:00Z",
+      "schema_version": "1.0",
+      "identifiers": [
+        { "type": "email", "value": "RIYA.SHAH@EXAMPLE.COM" },
+        { "type": "device_id", "value": "dev-17" }
+      ],
+      "entity_references": { "order_id": "ORD-204" },
+      "attributes": { "customer_name": "Riya Shah" }
+    },
+    {
+      "source_event_id": "DEMO-CC-01",
+      "channel": "call_center",
+      "event_type": "support_contacted",
+      "occurred_at": "2026-09-15T11:00:00Z",
+      "schema_version": "1.0",
+      "identifiers": [
+        { "type": "phone", "value": "+91-98765-43210" },
+        { "type": "email", "value": "RIYA.SHAH@EXAMPLE.COM" }
+      ],
+      "entity_references": { "order_id": "ORD-204" },
+      "attributes": { "customer_name": "Riya Shah" }
+    },
+    {
+      "source_event_id": "DEMO-STORE-01",
+      "channel": "physical_store",
+      "event_type": "return_requested",
+      "occurred_at": "2026-09-16T12:00:00Z",
+      "schema_version": "1.0",
+      "identifiers": [
+        { "type": "phone", "value": "9876543210" }
+      ],
+      "entity_references": { "order_id": "ORD-204" },
+      "attributes": { "customer_name": "Riya Shah", "city": "mumbai" }
+    },
+    {
+      "source_event_id": "DEMO-WEB-02",
+      "channel": "web",
+      "event_type": "product_viewed",
+      "occurred_at": "2026-09-18T10:30:00Z",
+      "schema_version": "1.0",
+      "identifiers": [],
+      "entity_references": {},
+      "attributes": { "customer_name": "Aarav Patel", "city": "mumbai" }
+    },
+    {
+      "source_event_id": "DEMO-APP-02",
+      "channel": "mobile_app",
+      "event_type": "product_viewed",
+      "occurred_at": "2026-09-18T11:00:00Z",
+      "schema_version": "1.0",
+      "identifiers": [
+        { "type": "email", "value": "AARAV.REVIEW@EXAMPLE.COM" },
+        { "type": "device_id", "value": "dev-701" }
+      ],
+      "entity_references": {},
+      "attributes": { "customer_name": "Aarav Patel" }
+    }
+  ]
+}

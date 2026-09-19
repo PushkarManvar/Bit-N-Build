@@ -68,3 +68,9 @@ class ReviewStatus(StrEnum):
     APPROVED = "approved"
     REJECTED = "rejected"
     PROFILE_CREATED = "profile_created"
+
+
+class DemoRunStatus(StrEnum):
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"

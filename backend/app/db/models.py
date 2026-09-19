@@ -15,6 +15,7 @@ from app.core.enums import (
     AlertStatus,
     AlertType,
     Channel,
+    DemoRunStatus,
     EventType,
     IdentityOutcome,
     ProcessingStatus,
@@ -223,3 +224,24 @@ class EvaluationRun(Base):
     )
     metrics: Mapped[dict] = mapped_column(_jsonb(), nullable=False, default=dict)
     note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+
+class DemoRun(Base):
+    """Deterministic demo playback state (Gate G7)."""
+
+    __tablename__ = "demo_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    run_id: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    scenario: Mapped[str] = mapped_column(String(100), nullable=False)
+    total_steps: Mapped[int] = mapped_column(Integer, nullable=False)
+    interval_seconds: Mapped[float] = mapped_column(nullable=False)
+    status: Mapped[DemoRunStatus] = mapped_column(
+        Enum(DemoRunStatus, native_enum=False), nullable=False, default=DemoRunStatus.RUNNING
+    )
+    current_step: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_event_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    error: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_now_utc
+    )
