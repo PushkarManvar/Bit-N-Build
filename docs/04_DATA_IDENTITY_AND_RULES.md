@@ -1,7 +1,8 @@
 # JourneyLens Data, Identity Resolution, and Journey Rules
 
 **Version:** 1.0  
-**Purpose:** Make the core mechanism implementable, explainable, and testable.
+**Purpose:** Make the core mechanism implementable, explainable, and testable.  
+**Change note (Phase 0 freeze):** channel enum renamed to `call_center`; identity outcome `review_required` → `review_required`; the wire event envelope is frozen in `docs/05_API_CONTRACT.md` (`identifiers`, `entity_references`, `attributes`). This document is the matching-rule spec and is refined during Gate G2.
 
 ## 1. Canonical event model
 
@@ -9,7 +10,7 @@ Every source adapter must produce this logical structure:
 
 | Field | Type | Required | Notes |
 |---|---|---:|---|
-| `channel` | enum | Yes | `web`, `mobile_app`, `call_centre`, `physical_store` |
+| `channel` | enum | Yes | `web`, `mobile_app`, `call_center`, `physical_store` |
 | `event_type` | string | Yes | Normalized event vocabulary |
 | `occurred_at` | timestamp | Yes | UTC |
 | `email` | string/null | No | Trimmed and lowercased |
@@ -193,7 +194,7 @@ Strong identifiers can justify auto-linking if they agree. Weak identifiers help
 3. Add at most 5 points for moderate support.
 4. Add at most 5 points for weak support.
 5. Cap at 100.
-6. If any strong conflict exists, label the outcome `manual_review`.
+6. If any strong conflict exists, label the outcome `review_required`.
 
 This policy keeps the user-facing score understandable and avoids misleading values such as 270.
 
@@ -296,7 +297,7 @@ Name similarity may retrieve or rank candidates. It may never produce `auto_link
 ```text
 data/raw/web_events.jsonl
 data/raw/mobile_events.jsonl
-data/raw/call_centre_events.jsonl
+data/raw/call_center_events.jsonl
 data/raw/store_events.jsonl
 ```
 

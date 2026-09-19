@@ -50,8 +50,8 @@ The team should not begin with a complete dashboard or hundreds of generated eve
 
 Agree on these exact values:
 
-- channels: `web`, `mobile_app`, `call_centre`, `physical_store`;
-- identity outcomes: `auto_linked`, `manual_review`, `new_profile`, `rejected`;
+- channels: `web`, `mobile_app`, `call_center`, `physical_store`;
+- identity outcomes: `auto_linked`, `review_required`, `new_profile`;
 - processing states: `received`, `normalized`, `matched`, `failed`, `duplicate`;
 - primary event types: `return_started`, `return_requested`, `refund_status_checked`, `support_call`, `refund_completed`;
 - flagship profile: Riya Shah;
