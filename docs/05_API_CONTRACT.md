@@ -537,7 +537,85 @@ Return `null` for metrics that have not been computed. Do not return invented de
 }
 ```
 
-## 10. Demo controls
+## 10. Data Pipeline (additive)
+
+### `GET /api/pipeline/overview`
+
+Returns one unfiltered, internally consistent initial snapshot for the Data Pipeline page. `limit` controls only the number of recent event rows and must be between 1 and 100; it defaults to `25`. Filtered keyset pagination and polling are additive follow-up contracts.
+
+```json
+{
+  "as_of": "2026-09-20T12:00:00Z",
+  "stages": {
+    "raw_accepted": 2,
+    "normalization_succeeded": 1,
+    "normalization_failed": 1,
+    "identity_decided": 1,
+    "profile_linked": 1,
+    "review_required": 0
+  },
+  "channels": {
+    "web": { "raw": 2, "normalized": 1, "failed": 1 },
+    "mobile_app": { "raw": 0, "normalized": 0, "failed": 0 },
+    "call_center": { "raw": 0, "normalized": 0, "failed": 0 },
+    "physical_store": { "raw": 0, "normalized": 0, "failed": 0 }
+  },
+  "events": [
+    {
+      "raw_event_id": "b2f7dd88-4e7d-4c54-98e5-7ad1af930613",
+      "canonical_event_id": "078c37ef-c93a-4dda-b515-419b44806593",
+      "source_event_id": "WEB-001",
+      "channel": "web",
+      "event_type": "product_viewed",
+      "occurred_at": "2026-09-19T08:30:00Z",
+      "received_at": "2026-09-20T12:00:00Z",
+      "processed_at": "2026-09-20T12:00:01Z",
+      "processing_status": "normalized",
+      "processing_error_code": null,
+      "profile_id": "9f4e47b9-c0bf-4723-90a1-437957a2b4a6",
+      "identity_outcome": "new_profile",
+      "identity_score": 0,
+      "needs_review": false
+    }
+  ],
+  "next_cursor": null,
+  "poll_cursor": null,
+  "duplicate_attempts": null,
+  "duplicate_tracking_supported": false
+}
+```
+
+Count definitions:
+
+- `raw_accepted`: persisted raw-event rows;
+- `normalization_succeeded`: persisted canonical-event rows;
+- `normalization_failed`: raw rows whose processing status is `failed`;
+- `identity_decided`: persisted match-decision rows;
+- `profile_linked`: canonical rows with a non-null profile ID; and
+- `review_required`: decisions whose outcome is `review_required` and review status remains `pending`.
+
+Event-row rules:
+
+- Rows are ordered by `received_at DESC`, then `raw_event_id DESC`.
+- `processed_at` is exactly `canonical_events.created_at`: the canonical insert time, not a duration or end-to-end latency measurement. It is `null` when no canonical event exists.
+- Canonical and identity fields are nullable for failed raw events.
+- `processing_error_code` exposes only the stable code before the stored error message.
+- `received` is a valid compatibility state but normal synchronous processing does not leave a committed row in that state. It appears only if a recovery/import path explicitly persists an interrupted record; callers should expect the filter to be empty in ordinary operation.
+- The list never includes raw payloads, full identifiers, candidates, or evidence values.
+- Duplicate attempts remain `null`/unsupported because the current idempotency contract creates no persisted duplicate-attempt row.
+
+`next_cursor` and `poll_cursor` are reserved nullable fields in this first slice. They become non-null only when the versioned pagination and polling contracts are implemented.
+
+### Initial pipeline examples
+
+The backend contract tests cover these snapshots:
+
+- empty database;
+- one normalized event;
+- one persisted normalization failure; and
+- one pending `review_required` event with no linked profile.
+
+## 11. Demo controls
 
 ### `POST /api/demo/reset`
 
@@ -618,7 +696,7 @@ Returns recent processed events, new alerts, changed review counts, and current 
 }
 ```
 
-## 11. Contract governance
+## 12. Contract governance
 
 - Treat this document and generated OpenAPI as the shared contract.
 - Frontend mock fixtures must match these response shapes.
@@ -626,7 +704,7 @@ Returns recent processed events, new alerts, changed review counts, and current 
 - Add fields compatibly when possible; do not rename fields during the final six hours.
 - API examples become integration-test fixtures.
 
-## 12. API definition of done
+## 13. API definition of done
 
 - [ ] All endpoints appear in `/docs`.
 - [ ] Example requests pass validation.

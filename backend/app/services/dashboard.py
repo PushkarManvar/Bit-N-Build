@@ -1,4 +1,4 @@
-"""Dashboard polling feed (docs/05_API_CONTRACT.md section 10)."""
+"""Dashboard polling feed (docs/05_API_CONTRACT.md section 11)."""
 
 from datetime import UTC, datetime
 

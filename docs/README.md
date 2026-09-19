@@ -21,6 +21,7 @@ Read these documents in order when joining the project:
 | 15 | `13_REVIEW_QUEUE_DATA_VARIETY_PLAN.md` | Planned backend/data work for a small, varied, truthful Review Queue |
 | 16 | `14_CUSTOMER_AND_JOURNEY_DATA_VARIETY_PLAN.md` | Planned backend/data work for varied, truthful customer and journey views |
 | 17 | `15_COMMAND_CENTRE_SIGNAL_INTEGRITY_PLAN.md` | Planned backend/data work for a truthful, varied Command Centre |
+| 18 | `16_DATA_PIPELINE_READ_MODEL_PLAN.md` | Ordered backend/data/frontend work for a truthful pipeline snapshot, event stream, inspector, and polling |
 
 Repository-level instructions:
 

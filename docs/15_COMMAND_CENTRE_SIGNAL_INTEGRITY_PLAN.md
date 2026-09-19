@@ -256,6 +256,6 @@ The frontend does not locally deduplicate different alerts with similar copy, ca
 | Customer Explorer and Journey Detail | Document 14. | No. | Implement document 14 before adding richer profile/timeline UI. |
 | Command Centre | This document. | No after this document lands. | Implement this document with the shared seed work in document 14. |
 | Demo Controller | Document 14's named scenarios/reset modes plus existing workflow specification. | No. | It should consume the shared scenario constructors; another data plan would duplicate work. |
-| Data Pipeline | Existing document 12 identifies missing `BE-FE-04` event-list and `BE-FE-05` aggregate contracts, but does not define their complete read model. | **Yes, later.** | Create a dedicated Pipeline Read-Model Plan only when `/pipeline` becomes the next implementation target. It needs raw/canonical/duplicate/failed-event pagination and separate privacy rules, so it should not be bundled into this dashboard plan. |
+| Data Pipeline | `docs/16_DATA_PIPELINE_READ_MODEL_PLAN.md` now defines the `BE-FE-04` event-list and `BE-FE-05` aggregate contracts, inspector, polling, privacy rules, and duplicate-telemetry boundary. | No. | Implement document 16 as its own vertical slice; do not bundle it into the dashboard work. |
 
 No other generic-data document is needed before these three planned surfaces are implemented. Do not create a document for visual-only refinements; use the existing design system and Stitch implementation guide for those.
