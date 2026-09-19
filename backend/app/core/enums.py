@@ -61,3 +61,10 @@ class AlertSeverity(StrEnum):
 class AlertStatus(StrEnum):
     OPEN = "open"
     RESOLVED = "resolved"
+
+
+class ReviewStatus(StrEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    PROFILE_CREATED = "profile_created"

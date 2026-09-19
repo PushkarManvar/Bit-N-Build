@@ -500,7 +500,7 @@ approve_link | reject_link | create_profile
 }
 ```
 
-An `approve_match` request requires `selected_profile_id`.
+An `approve_link` request requires `selected_profile_id`.
 
 ## 9. Analytics
 

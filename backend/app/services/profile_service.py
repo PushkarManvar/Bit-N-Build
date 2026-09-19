@@ -1,6 +1,6 @@
 """Profile and match-decision persistence for identity outcomes.
 
-Creates/link profiles, upserts normalized identifiers, and records the
+Creates/links profiles, upserts normalized identifiers, and records the
 explainable match decision for every canonical event.
 """
 
@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.enums import IdentityOutcome, ReviewStatus
 from app.db.models import (
     CanonicalEvent,
     CustomerProfile,
@@ -19,12 +20,14 @@ from app.db.models import (
 from app.services.identity_resolver import DecisionResult
 from app.services.normalizer import NormalizedEvent
 
+_EventLike = NormalizedEvent | CanonicalEvent
+
 
 def _now_utc() -> datetime:
     return datetime.now(UTC)
 
 
-def _identifier_values(event: NormalizedEvent) -> list[tuple[str, str]]:
+def _identifier_pairs(event: _EventLike) -> list[tuple[str, str]]:
     values = [(ref["type"], ref["value"]) for ref in event.identifiers if ref.get("value")]
     order_id = event.entity_references.get("order_id")
     if order_id:
@@ -32,7 +35,7 @@ def _identifier_values(event: NormalizedEvent) -> list[tuple[str, str]]:
     return values
 
 
-def _display_name(event: NormalizedEvent) -> str | None:
+def _display_name(event: _EventLike) -> str | None:
     raw = event.attributes.get("customer_name")
     if not raw:
         return None
@@ -40,16 +43,19 @@ def _display_name(event: NormalizedEvent) -> str | None:
     return normalized or None
 
 
-def _upsert_identifiers(db: Session, profile_id: uuid.UUID, event: NormalizedEvent) -> None:
+def _upsert_identifiers(db: Session, profile_id: uuid.UUID, event: _EventLike) -> None:
+    """Claim identifiers for a profile, skipping values already owned anywhere.
+
+    A normalized identifier belongs to exactly one profile (first seen wins).
+    This keeps review reject/create paths from stealing identifiers that a
+    candidate profile already owns (e.g. a shared device).
+    """
     now = _now_utc()
-    existing = set(
-        db.scalars(
-            select(ProfileIdentifier).where(ProfileIdentifier.profile_id == profile_id)
-        ).all()
+    owned = set(
+        db.execute(select(ProfileIdentifier.type, ProfileIdentifier.value)).all()
     )
-    existing_pairs = {(row.type, row.value) for row in existing}
-    for id_type, value in _identifier_values(event):
-        if (id_type, value) in existing_pairs:
+    for id_type, value in _identifier_pairs(event):
+        if (id_type, value) in owned:
             continue
         db.add(
             ProfileIdentifier(
@@ -59,10 +65,40 @@ def _upsert_identifiers(db: Session, profile_id: uuid.UUID, event: NormalizedEve
                 first_seen_at=now,
             )
         )
+        owned.add((id_type, value))
 
 
-def _link_canonical(db: Session, canonical: CanonicalEvent, profile_id: uuid.UUID) -> None:
-    canonical.profile_id = profile_id
+def attach_event_to_profile(
+    db: Session,
+    canonical: CanonicalEvent,
+    event: _EventLike,
+    profile: CustomerProfile,
+) -> None:
+    """Attach a canonical event to an existing profile (auto-link or review approve)."""
+    now = _now_utc()
+    profile.last_seen_at = now
+    if profile.display_name is None:
+        profile.display_name = _display_name(event)
+    _upsert_identifiers(db, profile.id, event)
+    canonical.profile_id = profile.id
+
+
+def create_profile_for_event(
+    db: Session,
+    canonical: CanonicalEvent,
+    event: _EventLike,
+) -> CustomerProfile:
+    """Create a fresh profile and attach the event to it (new_profile or review reject)."""
+    now = _now_utc()
+    profile = CustomerProfile(
+        display_name=_display_name(event),
+        first_seen_at=now,
+        last_seen_at=now,
+    )
+    db.add(profile)
+    db.flush()
+    attach_event_to_profile(db, canonical, event, profile)
+    return profile
 
 
 def persist_match_decision(
@@ -82,6 +118,11 @@ def persist_match_decision(
         conflicts=decision.conflicts,
         candidates=decision.candidates,
         decision_reason=decision.reason,
+        review_status=(
+            ReviewStatus.PENDING
+            if decision.outcome == IdentityOutcome.REVIEW_REQUIRED
+            else None
+        ),
     )
     db.add(record)
     db.flush()
@@ -94,16 +135,7 @@ def apply_new_profile(
     event: NormalizedEvent,
     decision: DecisionResult,
 ) -> CustomerProfile:
-    now = _now_utc()
-    profile = CustomerProfile(
-        display_name=_display_name(event),
-        first_seen_at=now,
-        last_seen_at=now,
-    )
-    db.add(profile)
-    db.flush()
-    _upsert_identifiers(db, profile.id, event)
-    _link_canonical(db, canonical, profile.id)
+    profile = create_profile_for_event(db, canonical, event)
     persist_match_decision(db, canonical, decision, profile_id=profile.id)
     return profile
 
@@ -115,12 +147,7 @@ def apply_auto_link(
     decision: DecisionResult,
     profile: CustomerProfile,
 ) -> None:
-    now = _now_utc()
-    profile.last_seen_at = now
-    if profile.display_name is None:
-        profile.display_name = _display_name(event)
-    _upsert_identifiers(db, profile.id, event)
-    _link_canonical(db, canonical, profile.id)
+    attach_event_to_profile(db, canonical, event, profile)
     persist_match_decision(db, canonical, decision, profile_id=profile.id)
 
 
@@ -129,7 +156,7 @@ def apply_review_required(
     canonical: CanonicalEvent,
     decision: DecisionResult,
 ) -> None:
-    """Hold the event without linking; record the decision for the review queue."""
+    """Hold the event without linking; record the pending decision for review."""
     persist_match_decision(db, canonical, decision, profile_id=None)
 
 
