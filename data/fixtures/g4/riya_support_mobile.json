@@ -1,0 +1,21 @@
+{
+  "source_event_id": "APP-204-SUP1",
+  "channel": "mobile_app",
+  "event_type": "support_contacted",
+  "occurred_at": "2026-09-15T10:00:00Z",
+  "schema_version": "1.0",
+  "identifiers": [
+    {
+      "type": "email",
+      "value": "RIYA.SHAH@EXAMPLE.COM"
+    },
+    {
+      "type": "device_id",
+      "value": "dev-17"
+    }
+  ],
+  "entity_references": {
+    "order_id": "ORD-204"
+  },
+  "attributes": {}
+}

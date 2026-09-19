@@ -255,21 +255,23 @@ Name similarity may retrieve or rank candidates. It may never produce `auto_link
 
 ## 10. Journey rules
 
+Event types below use the frozen vocabulary from `docs/05_API_CONTRACT.md` (`return_requested`, `refund_completed`, `support_contacted`, `order_placed`, `product_viewed`).
+
 ### Rule JR-001 — Unresolved refund
 
 **Inputs:** Profile and order events.  
 **Create alert when:**
 
-- at least one return lifecycle event exists;
+- at least one return lifecycle event (`return_requested`) exists;
 - no `refund_completed` event exists; and
-- at least two support-related events exist.
+- at least two support-related events (`support_contacted`) exist.
 
 **Output:** `unresolved_refund`, high severity.  
 **Deduplication key:** profile + order + type + open status.
 
 ### Rule JR-002 — Repeat contact
 
-**Create alert when:** At least two `support_call`, `support_ticket_created`, or `refund_status_checked` events occur within 72 hours for the same profile/order.
+**Create alert when:** At least two `support_contacted` events occur within 72 hours for the same profile/order.
 
 **Output:** `repeat_contact`, medium severity.
 
@@ -281,7 +283,7 @@ Name similarity may retrieve or rank candidates. It may never produce `auto_link
 
 ### Rule JR-004 — Checkout drop-off
 
-**Stretch rule:** `checkout_started` has no later `order_placed` within 24 hours.
+**Stretch rule:** `order_placed` has no later `refund_completed`/resolution within the journey window (stretch, refined later).
 
 **Output:** `journey_dropoff`, low severity.
 

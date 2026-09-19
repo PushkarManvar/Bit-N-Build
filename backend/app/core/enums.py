@@ -44,3 +44,20 @@ class ReviewDecision(StrEnum):
     APPROVE_LINK = "approve_link"
     REJECT_LINK = "reject_link"
     CREATE_PROFILE = "create_profile"
+
+
+class AlertType(StrEnum):
+    UNRESOLVED_REFUND = "unresolved_refund"
+    REPEAT_CONTACT = "repeat_contact"
+
+
+class AlertSeverity(StrEnum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class AlertStatus(StrEnum):
+    OPEN = "open"
+    RESOLVED = "resolved"

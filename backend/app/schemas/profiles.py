@@ -4,7 +4,26 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.core.enums import Channel, EventType, IdentityOutcome
+from app.core.enums import (
+    AlertSeverity,
+    AlertStatus,
+    AlertType,
+    Channel,
+    EventType,
+    IdentityOutcome,
+)
+
+
+class AlertOut(BaseModel):
+    id: str
+    type: AlertType
+    severity: AlertSeverity
+    title: str
+    description: str
+    recommended_action: str
+    status: AlertStatus
+    order_id: str | None = None
+    created_at: datetime
 
 
 class ProfileIdentifierOut(BaseModel):
@@ -46,5 +65,10 @@ class TimelineEventOut(BaseModel):
 class ProfileJourneyResponse(BaseModel):
     profile: dict
     timeline: list[TimelineEventOut]
-    alerts: list[dict] = []
+    alerts: list[AlertOut] = []
     journey_summary: dict | None = None
+
+
+class AlertListResponse(BaseModel):
+    items: list[AlertOut]
+    total: int

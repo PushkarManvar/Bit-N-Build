@@ -378,6 +378,29 @@ Stable error codes:
 }
 ```
 
+### `GET /api/alerts`
+
+Open journey alerts across all profiles (Command Centre feed). **Additive endpoint (Gate G4).**
+
+```json
+{
+  "items": [
+    {
+      "id": "uuid",
+      "type": "unresolved_refund",
+      "severity": "high",
+      "title": "Refund ORD-204 remains unresolved",
+      "description": "Return activity and repeated contacts exist without a refund completion.",
+      "recommended_action": "Prioritize refund resolution.",
+      "status": "open",
+      "order_id": "ORD-204",
+      "created_at": "2026-09-19T10:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
 ## 7. Match explanation
 
 ### `GET /api/events/{canonical_event_id}/match-explanation`

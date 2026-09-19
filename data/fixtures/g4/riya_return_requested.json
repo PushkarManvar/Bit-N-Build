@@ -1,0 +1,19 @@
+{
+  "source_event_id": "WEB-204-RET",
+  "channel": "web",
+  "event_type": "return_requested",
+  "occurred_at": "2026-09-14T09:00:00Z",
+  "schema_version": "1.0",
+  "identifiers": [
+    {
+      "type": "email",
+      "value": "RIYA.SHAH@EXAMPLE.COM"
+    }
+  ],
+  "entity_references": {
+    "order_id": "ORD-204"
+  },
+  "attributes": {
+    "customer_name": "Riya Shah"
+  }
+}
