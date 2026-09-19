@@ -273,12 +273,20 @@ export interface PipelineChannels {
   physical_store: PipelineChannelCounts;
 }
 
+export interface PipelineEventSummary {
+  title: string;
+  detail: string | null;
+  kind: string;
+}
+
 export interface PipelineEventOut {
   raw_event_id: string;
   canonical_event_id: string | null;
   source_event_id: string;
   channel: Channel;
   event_type: EventType | null;
+  event_summary: PipelineEventSummary | null;
+  has_order_reference: boolean | null;
   occurred_at: string;
   received_at: string;
   /** Canonical insert time, not an end-to-end processing duration. */
