@@ -18,6 +18,7 @@ Read these documents in order when joining the project:
 | 12 | `10_REMAINING_DOCUMENTS_REGISTER.md` | Documents needed later and their trigger points |
 | 13 | `11_TOOLING_REFERENCES.md` | Primary references for OpenCode, Docker, and CI |
 | 14 | `12_STITCH_FRONTEND_IMPLEMENTATION_GUIDE.md` | Screen-by-screen frontend plan reconciled with the live backend contract |
+| 15 | `13_REVIEW_QUEUE_DATA_VARIETY_PLAN.md` | Planned backend/data work for a small, varied, truthful Review Queue |
 
 Repository-level instructions:
 
