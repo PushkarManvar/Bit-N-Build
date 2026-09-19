@@ -88,6 +88,12 @@ export function EventInspector({ rawEventId, onClose }: { rawEventId: string | n
             <h2 id="pipeline-inspector-title" className="mt-1 truncate text-lg font-bold text-[#172554]">
               {detail?.event.source_event_id ?? "Loading event…"}
             </h2>
+            {detail?.event.event_summary && (
+              <p className="mt-1 text-sm text-[#475467]">
+                <span className="font-medium text-[#344054]">{detail.event.event_summary.title}</span>
+                {detail.event.event_summary.detail && ` · ${detail.event.event_summary.detail}`}
+              </p>
+            )}
             <p className="mt-1 break-all font-mono text-xs text-[#667085]">Raw event ID: {rawEventId}</p>
           </div>
           <button
