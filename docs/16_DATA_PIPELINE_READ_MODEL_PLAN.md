@@ -294,12 +294,18 @@ Each task should normally fit within two hours and end in a focused commit.
 | 5 | Add filtered keyset pagination for `/api/pipeline/events`. | service, schemas, route | Done: equal timestamps, filter-before-count, stable next page, invalid cursor 422. |
 | 6 | Add the composed inspector detail endpoint. | service, schemas, route | Done: normalized, failed, review-required, malformed-ID, and missing-ID tests. |
 | 7 | Add high-water cursor polling and authoritative aggregate refresh. | service, route | Done: empty origin and 101-event burst prove no loss or duplicates. |
-| 8 | Add only the indexes proven useful by the final queries. | new Alembic migration | Clean PostgreSQL migration and query-plan review. |
+| 8 | Add only the indexes proven useful by the final queries. | new Alembic migration, if needed | Done: PostgreSQL query-plan review found no current index worth adding. |
 | 9 | Add frontend types and request functions. | `frontend/lib/types.ts`, `frontend/lib/api.ts` | Typecheck plus contract fixture tests. |
 | 10 | Build stage/channel cards and the real event stream. | `components/pipeline/`, pipeline page | Loading, empty, filtered-empty, failure, and success states. |
 | 11 | Build the accessible inspector and ID-safe tabs. | `EventInspector.tsx` | Keyboard tab/dialog checks; raw/canonical IDs never cross. |
 | 12 | Add polling, burst draining, degraded state, and stable selection. | `PipelineView.tsx` | Fake-timer polling tests and 101-event integration case. |
 | 13 | Run end-to-end verification with generated data and the Riya demo. | backend/frontend tests | Pipeline updates while the six-step demo runs; golden path unchanged. |
+
+### Task 8 decision: no migration yet
+
+On 2026-09-20, PostgreSQL 17 query plans were measured against the local persisted dataset (197 raw events, 195 canonical events, and 195 match decisions). The warmed overview and 101-row polling queries completed in approximately 1.1 ms and 0.5 ms respectively. PostgreSQL correctly selected sequential scans plus in-memory sorts for this small working set, while the existing unique indexes served the canonical and match-decision joins.
+
+A rollback-only probe of `(raw_events.received_at, raw_events.id)` did not prove a current benefit, so no schema migration or speculative filter index was added. Revisit this decision with production-like volume or a measured regression; retain the same keyset ordering pair if an index becomes justified.
 
 ## 11. First implementation slice
 
