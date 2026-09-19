@@ -63,6 +63,31 @@ def test_canonical_links_back_to_raw_event(client, riya_web_valid) -> None:
     assert data["raw_event"]["payload"]["source_event_id"] == "WEB-001"
 
 
+def test_support_note_is_preserved_raw_but_bounded_in_canonical(client) -> None:
+    event = {
+        "source_event_id": "CALL-204-CONTEXT",
+        "channel": "call_center",
+        "event_type": "support_contacted",
+        "occurred_at": "2026-09-20T12:00:00Z",
+        "schema_version": "1.0",
+        "identifiers": [],
+        "entity_references": {"order_id": "ORD-204"},
+        "attributes": {"notes": "Refund not received"},
+    }
+    response = client.post("/api/events", json=event)
+
+    assert response.status_code == 201
+    detail = client.get(f"/api/events/{response.json()['raw_event_id']}")
+    assert detail.status_code == 200
+    body = detail.json()
+    assert body["raw_event"]["payload"]["attributes"] == {
+        "notes": "Refund not received"
+    }
+    assert body["canonical_event"]["attributes"] == {
+        "contact_reason": "refund_not_received"
+    }
+
+
 def test_identical_replay_creates_no_additional_rows(
     client, db_session, riya_web_valid, riya_web_duplicate
 ) -> None:
