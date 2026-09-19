@@ -68,6 +68,36 @@ The most important quality risk is an incorrect identity merge. Testing should t
 | Approve without selected profile | 422 validation error |
 | Resolve same case twice | Conflict or existing resolution returned safely |
 
+### Synthetic dataset
+
+The dataset is generated deterministically, not hand-authored:
+
+```bash
+# local (repository data/ directory)
+python backend/scripts/generate_synthetic_data.py
+
+# inside compose (data/ is mounted at /data)
+docker compose run --rm --no-deps backend \
+  python scripts/generate_synthetic_data.py
+```
+
+Validate the generated output against the frozen G1 contract:
+
+```bash
+docker compose run --rm --no-deps backend \
+  python scripts/validate_synthetic_data.py
+```
+
+Composition targets (docs/04 §11): 30–40 customers, 180–250 source events,
+3–5 invalid records, 3–8 duplicates, 5–10 manual-review candidates,
+5 broken journeys, 2–3 same-name collisions, 5–8 anonymous-to-known
+transitions.
+
+Truth files are isolated in `data/truth/` (gitignored). Runtime matching,
+ingestion, and API responses must never read them; only the evaluation step
+does. `backend/tests/test_synthetic_dataset.py` verifies the dataset is valid,
+on-target, deterministic, and free of truth identifiers.
+
 ## 3. Evaluation methodology
 
 ### Pair-level identity evaluation

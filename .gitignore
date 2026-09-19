@@ -24,5 +24,10 @@ npm-debug.log*
 data/generated/
 coverage/
 
+# Hidden ground truth. Evaluation-only: never read by runtime matching, never
+# exposed in API responses. Regenerate with backend/scripts/generate_synthetic_data.py.
+data/truth/*.csv
+data/truth/*.jsonl
+
 # Local upload staging folder (duplicates live under docs/ and repo root)
 doc/
