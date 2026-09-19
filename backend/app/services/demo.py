@@ -81,7 +81,8 @@ def default_data_dir() -> Path:
         return Path(env)
     if Path("/data").is_dir():
         return Path("/data")
-    return Path(__file__).resolve().parents[2] / "data"
+    # app/services/demo.py -> backend -> repo root
+    return Path(__file__).resolve().parents[3] / "data"
 
 
 def _load_baseline(db: Session, data_dir: Path) -> dict[str, int]:
