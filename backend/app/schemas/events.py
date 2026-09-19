@@ -1,37 +1,71 @@
+"""Pydantic request/response schemas for event ingestion.
+
+Shapes are frozen in docs/05_API_CONTRACT.md.
+"""
+
 from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-Channel = Literal["web", "mobile_app", "call_centre", "physical_store"]
-ProcessingStatus = Literal["received", "normalized", "matched", "failed", "duplicate"]
+from app.core.enums import Channel, EventType, ProcessingStatus
+
+IdentifierType = Literal["email", "phone", "device_id", "session_id", "customer_id"]
+
+IngestionResponseStatus = Literal["normalized", "duplicate", "failed"]
+
+
+class IdentifierRef(BaseModel):
+    type: IdentifierType
+    value: str
 
 
 class EventIngestionRequest(BaseModel):
-    source: Channel
-    source_record_id: str = Field(min_length=1, max_length=200)
-    occurred_at: datetime
-    payload: dict[str, Any]
-
-
-class CanonicalEvent(BaseModel):
+    source_event_id: str = Field(min_length=1, max_length=200)
     channel: Channel
-    event_type: str
+    event_type: EventType
     occurred_at: datetime
-    email: str | None = None
-    phone: str | None = None
-    device_id: str | None = None
-    session_id: str | None = None
-    customer_id: str | None = None
-    order_id: str | None = None
-    issue_id: str | None = None
-    customer_name: str | None = None
-    city: str | None = None
+    schema_version: str = Field(min_length=1, max_length=20)
+    identifiers: list[IdentifierRef] = Field(default_factory=list)
+    entity_references: dict[str, Any] = Field(default_factory=dict)
     attributes: dict[str, Any] = Field(default_factory=dict)
 
 
 class EventIngestionResponse(BaseModel):
-    source_record_id: str
-    status: ProcessingStatus
-    canonical_event: CanonicalEvent
-    message: str
+    raw_event_id: str
+    canonical_event_id: str | None = None
+    channel: Channel
+    event_type: EventType | None = None
+    occurred_at: datetime | None = None
+    processing_status: IngestionResponseStatus
+    duplicate: bool = False
+
+
+class RawEventDetail(BaseModel):
+    id: str
+    channel: Channel
+    source_event_id: str
+    schema_version: str
+    occurred_at: datetime
+    received_at: datetime
+    payload: dict[str, Any]
+    processing_status: ProcessingStatus
+    processing_error: str | None = None
+
+
+class CanonicalEventDetail(BaseModel):
+    id: str
+    raw_event_id: str
+    channel: Channel
+    event_type: EventType
+    occurred_at: datetime
+    profile_id: str | None = None
+    identifiers: list[dict[str, Any]]
+    entity_references: dict[str, Any]
+    attributes: dict[str, Any]
+    created_at: datetime
+
+
+class EventRetrievalResponse(BaseModel):
+    raw_event: RawEventDetail
+    canonical_event: CanonicalEventDetail | None = None

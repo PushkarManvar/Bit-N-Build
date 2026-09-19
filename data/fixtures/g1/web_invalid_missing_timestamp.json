@@ -1,0 +1,9 @@
+{
+  "source_event_id": "WEB-INVALID-TS",
+  "channel": "web",
+  "event_type": "product_viewed",
+  "schema_version": "1.0",
+  "identifiers": [],
+  "entity_references": {},
+  "attributes": {}
+}

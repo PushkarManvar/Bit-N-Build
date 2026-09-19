@@ -1,38 +1,56 @@
 # JourneyLens API Contract
 
-**Version:** 1.0  
+**Version:** 1.1 — Phase 0 / Gate G1 frozen  
 **Base path:** `/api`  
-**Format:** JSON unless documented otherwise
+**Format:** JSON unless documented otherwise  
+**Change note (v1.0 → v1.1):** event envelope flattened; channels renamed to `call_center`; processing states reduced to `received|normalized|failed`; identity outcomes separated from review decisions; event types enumerated. Breaking changes were approved during the Phase 0 contract freeze.
 
 ## 1. API conventions
 
 - UUIDs are serialized as strings.
-- Timestamps use ISO 8601 UTC.
-- Enum values use `snake_case`.
+- Timestamps use ISO 8601 UTC; all timestamps are normalized to UTC on ingestion.
+- Enum values use lowercase `snake_case`.
 - List responses use `{ "items": [], "total": number }`.
-- Validation errors use HTTP 422.
-- Raw acceptance with downstream processing failure may use HTTP 202.
-- Duplicate ingestion returns the existing result with HTTP 200.
+- Envelope validation failures use HTTP 422.
 - New successful ingestion returns HTTP 201.
+- Duplicate ingestion (same channel + source ID + identical payload) returns HTTP 200 with `processing_status: "duplicate"` and creates no new rows.
+- Source ID reused with a different payload returns HTTP 409.
+- Raw acceptance with a downstream normalization failure returns HTTP 202 and keeps the raw event marked `failed`.
+- All errors use the shared error response shape.
 
 ## 2. Shared types
 
 ### Channel
 
 ```text
-web | mobile_app | call_centre | physical_store
+web | mobile_app | call_center | physical_store
 ```
 
 ### Processing status
 
 ```text
-received | normalized | matched | failed | duplicate
+received | normalized | failed
 ```
 
-### Identity decision
+A duplicate is an API response status, not a persisted processing state.
+
+### Event type
 
 ```text
-auto_linked | manual_review | new_profile | rejected
+product_viewed | app_login | order_placed | return_requested |
+support_contacted | store_visited | refund_completed
+```
+
+### Identity outcome (Gate G2+)
+
+```text
+auto_linked | review_required | new_profile
+```
+
+### Review decision (Gate G2+)
+
+```text
+approve_link | reject_link | create_profile
 ```
 
 ### Alert severity
@@ -41,19 +59,91 @@ auto_linked | manual_review | new_profile | rejected
 low | medium | high | critical
 ```
 
+### Event envelope (frozen)
+
+```json
+{
+  "source_event_id": "WEB-001",
+  "channel": "web",
+  "event_type": "product_viewed",
+  "occurred_at": "2026-09-19T08:30:00Z",
+  "schema_version": "1.0",
+  "identifiers": [
+    {
+      "type": "device_id",
+      "value": "DEV-17"
+    }
+  ],
+  "entity_references": {
+    "order_id": null
+  },
+  "attributes": {
+    "product_id": "PROD-42",
+    "page": "/products/42"
+  }
+}
+```
+
+Field rules:
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `source_event_id` | string | yes | unique within a channel |
+| `channel` | `Channel` | yes | |
+| `event_type` | `EventType` | yes | |
+| `occurred_at` | ISO 8601 | yes | converted to UTC |
+| `schema_version` | string | yes | only `1.0` supported for G1 |
+| `identifiers` | array | yes | `{type, value}`; empty array allowed |
+| `entity_references` | object | yes | e.g. `order_id`; nullable values allowed |
+| `attributes` | object | yes | free-form; must be JSON-serializable |
+
+Identifier types for G1: `email`, `phone`, `device_id`, `session_id`, `customer_id`.
+
+Normalization rules:
+
+- `email`: trim and lowercase.
+- `device_id`: trim and uppercase.
+- `order_id`: trim and uppercase; spaces/underscores become hyphens.
+- `occurred_at`: converted to UTC.
+- Other identifier values: trimmed.
+
 ### Error response
 
 ```json
 {
   "error": {
-    "code": "NORMALIZATION_FAILED",
-    "message": "The event timestamp is invalid.",
-    "stage": "normalization",
+    "code": "EVENT_ID_REUSED",
+    "message": "Source event ID WEB-001 was reused with a different payload.",
+    "stage": "ingestion",
     "raw_event_id": "b2f7...",
     "details": {
-      "field": "callTime"
+      "channel": "web",
+      "source_event_id": "WEB-001"
     }
   }
+}
+```
+
+Stable error codes:
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `VALIDATION_ERROR` | 422 | Envelope failed validation |
+| `EVENT_ID_REUSED` | 409 | Same source ID, different payload |
+| `NORMALIZATION_FAILED` | 202 | Raw persisted, normalization failed |
+| `INGESTION_ERROR` | 500 | Unexpected failure |
+
+### Ingestion response (frozen)
+
+```json
+{
+  "raw_event_id": "uuid",
+  "canonical_event_id": "uuid-or-null",
+  "channel": "web",
+  "event_type": "product_viewed",
+  "occurred_at": "2026-09-19T08:30:00Z",
+  "processing_status": "normalized",
+  "duplicate": false
 }
 ```
 
@@ -65,56 +155,100 @@ low | medium | high | critical
 
 ```json
 {
-  "source": "mobile_app",
-  "source_record_id": "APP-90021",
-  "occurred_at": "2026-09-19T09:15:00Z",
-  "payload": {
-    "action": "refund_status_checked",
-    "email_address": "RIYA.SHAH@EXAMPLE.COM",
-    "device": "DEV-17",
-    "orderNumber": "ord 204",
-    "customerName": "Riya Shah"
+  "source_event_id": "WEB-001",
+  "channel": "web",
+  "event_type": "product_viewed",
+  "occurred_at": "2026-09-19T08:30:00Z",
+  "schema_version": "1.0",
+  "identifiers": [
+    {
+      "type": "device_id",
+      "value": "DEV-17"
+    }
+  ],
+  "entity_references": {
+    "order_id": null
+  },
+  "attributes": {
+    "product_id": "PROD-42",
+    "page": "/products/42"
   }
 }
 ```
 
-#### Successful response
+#### Responses
+
+`201 Created` — processed:
 
 ```json
 {
   "raw_event_id": "uuid",
   "canonical_event_id": "uuid",
-  "status": "matched",
-  "profile_id": "uuid",
-  "match_decision": "auto_linked",
-  "match_score": 100,
-  "evidence": [
-    {
-      "field": "order_id",
-      "result": "exact_match",
-      "weight": 95,
-      "message": "Order ORD-204 belongs to the selected profile."
-    },
-    {
-      "field": "device_id",
-      "result": "exact_match",
-      "weight": 45,
-      "message": "Device DEV-17 appeared in the earlier anonymous journey."
-    }
-  ],
-  "new_alerts": []
+  "channel": "web",
+  "event_type": "product_viewed",
+  "occurred_at": "2026-09-19T08:30:00Z",
+  "processing_status": "normalized",
+  "duplicate": false
 }
 ```
 
+`200 OK` — idempotent duplicate (same source ID + identical payload; no new rows):
+
+```json
+{
+  "raw_event_id": "uuid",
+  "canonical_event_id": "uuid",
+  "channel": "web",
+  "event_type": "product_viewed",
+  "occurred_at": "2026-09-19T08:30:00Z",
+  "processing_status": "duplicate",
+  "duplicate": true
+}
+```
+
+`202 Accepted` — raw persisted, normalization failed (schema version unsupported, ...):
+
+```json
+{
+  "raw_event_id": "uuid",
+  "canonical_event_id": null,
+  "channel": "web",
+  "event_type": "product_viewed",
+  "occurred_at": "2026-09-19T08:30:00Z",
+  "processing_status": "failed",
+  "duplicate": false
+}
+```
+
+`409 Conflict` — same source ID, different payload:
+
+```json
+{
+  "error": {
+    "code": "EVENT_ID_REUSED",
+    "message": "Source event ID WEB-001 was reused with a different payload.",
+    "stage": "ingestion",
+    "raw_event_id": "uuid",
+    "details": {
+      "channel": "web",
+      "source_event_id": "WEB-001"
+    }
+  }
+}
+```
+
+`422 Unprocessable Entity` — envelope validation failed (missing required field, unsupported channel/event type, malformed timestamp).
+
 #### Status behavior
 
-| Situation | Status |
-|---|---:|
-| New event fully processed | 201 |
-| Duplicate source record | 200 |
-| Envelope validation failed | 422 |
-| Raw saved, normalization failed | 202 |
-| Database/service failure | 500 or 503 |
+| Situation | Status | Persistence |
+|---|---|---:|
+| New event fully processed | 201 | raw + canonical |
+| Same source ID, identical payload | 200 | none (no new rows) |
+| Same source ID, different payload | 409 | none |
+| Envelope validation failed | 422 | none |
+| Raw saved, normalization failed | 202 | raw only, marked `failed` |
+| Database/service failure | 500 | as far as transaction reached |
 
 ## 4. Bulk ingestion
 
@@ -126,40 +260,29 @@ low | medium | high | critical
 {
   "events": [
     {
-      "source": "web",
-      "source_record_id": "WEB-001",
-      "occurred_at": "2026-09-14T08:00:00Z",
-      "payload": {
-        "event": "return_initiated",
-        "deviceId": "DEV-17",
-        "sessionId": "SESS-1001",
-        "order_id": "ORD-204"
+      "source_event_id": "WEB-001",
+      "channel": "web",
+      "event_type": "product_viewed",
+      "occurred_at": "2026-09-19T08:30:00Z",
+      "schema_version": "1.0",
+      "identifiers": [
+        {
+          "type": "device_id",
+          "value": "DEV-17"
+        }
+      ],
+      "entity_references": {
+        "order_id": null
+      },
+      "attributes": {
+        "product_id": "PROD-42"
       }
     }
   ]
 }
 ```
 
-#### Response
-
-```json
-{
-  "received": 1,
-  "processed": 1,
-  "duplicates": 0,
-  "failed": 0,
-  "manual_review": 0,
-  "results": [
-    {
-      "source_record_id": "WEB-001",
-      "status": "matched",
-      "raw_event_id": "uuid"
-    }
-  ]
-}
-```
-
-For the hackathon, keep the maximum batch size small and explicit, such as 500 events.
+**Note:** bulk ingestion is planned but not implemented in Gate G1. For the hackathon, keep the maximum batch size small and explicit, such as 500 events.
 
 ## 5. List profiles
 
@@ -174,7 +297,7 @@ For the hackathon, keep the maximum batch size small and explicit, such as 500 e
 | `search` | string | `riya` |
 | `has_open_alert` | boolean | `true` |
 | `review_required` | boolean | `false` |
-| `channel` | channel | `call_centre` |
+| `channel` | channel | `call_center` |
 
 #### Response
 
@@ -186,7 +309,7 @@ For the hackathon, keep the maximum batch size small and explicit, such as 500 e
       "display_name": "Riya Shah",
       "email": "riya.shah@example.com",
       "phone": "+919876543210",
-      "channels_used": ["web", "mobile_app", "call_centre", "physical_store"],
+      "channels_used": ["web", "mobile_app", "call_center", "physical_store"],
       "event_count": 6,
       "open_alert_count": 2,
       "review_required": false,
@@ -221,7 +344,7 @@ For the hackathon, keep the maximum batch size small and explicit, such as 500 e
   "timeline": [
     {
       "event_id": "uuid",
-      "channel": "call_centre",
+      "channel": "call_center",
       "event_type": "support_call",
       "occurred_at": "2026-09-16T12:30:00Z",
       "title": "Customer reports refund not received",
@@ -260,7 +383,7 @@ For the hackathon, keep the maximum batch size small and explicit, such as 500 e
 {
   "event_id": "uuid",
   "event_context": {
-    "channel": "call_centre",
+    "channel": "call_center",
     "event_type": "support_call",
     "occurred_at": "2026-09-16T12:30:00Z"
   },
@@ -269,7 +392,7 @@ For the hackathon, keep the maximum batch size small and explicit, such as 500 e
   "score": 100,
   "thresholds": {
     "auto_link": 80,
-    "manual_review": 50
+    "review_required": 50
   },
   "evidence": [
     {
@@ -363,7 +486,7 @@ An `approve_match` request requires `selected_profile_id`.
   "duplicate_events": 3,
   "unified_profiles": 31,
   "auto_link_rate": 84.6,
-  "manual_review_rate": 8.3,
+  "review_required_rate": 8.3,
   "open_alerts": 7,
   "match_precision": 0.96,
   "match_recall": 0.91,
@@ -381,7 +504,7 @@ Return `null` for metrics that have not been computed. Do not return invented de
 {
   "web": 61,
   "mobile_app": 55,
-  "call_centre": 49,
+  "call_center": 49,
   "physical_store": 53
 }
 ```

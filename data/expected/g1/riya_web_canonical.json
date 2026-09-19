@@ -1,0 +1,26 @@
+{
+  "channel": "web",
+  "event_type": "product_viewed",
+  "occurred_at": "2026-09-19T08:30:00Z",
+  "identifiers": [
+    {
+      "type": "email",
+      "value": "riya.shah@example.com"
+    },
+    {
+      "type": "device_id",
+      "value": "DEV-17"
+    },
+    {
+      "type": "session_id",
+      "value": "sess-1001"
+    }
+  ],
+  "entity_references": {
+    "order_id": "ORD-204"
+  },
+  "attributes": {
+    "product_id": "PROD-42",
+    "page": "/products/42"
+  }
+}
