@@ -18,6 +18,8 @@ from app.core.enums import (
     EventType,
     IdentityOutcome,
     ProcessingStatus,
+    ReviewDecision,
+    ReviewStatus,
 )
 from app.db.base import Base
 
@@ -141,6 +143,31 @@ class MatchDecision(Base):
     conflicts: Mapped[list[dict]] = mapped_column(_jsonb(), nullable=False, default=list)
     candidates: Mapped[list[dict]] = mapped_column(_jsonb(), nullable=False, default=list)
     decision_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    review_status: Mapped[ReviewStatus | None] = mapped_column(
+        Enum(ReviewStatus, native_enum=False), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_now_utc
+    )
+
+
+class ReviewAction(Base):
+    """Append-only audit record of a human review resolution (Gate G5)."""
+
+    __tablename__ = "review_actions"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    match_decision_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("match_decisions.id"), nullable=False, index=True
+    )
+    action: Mapped[ReviewDecision] = mapped_column(
+        Enum(ReviewDecision, native_enum=False), nullable=False
+    )
+    selected_profile_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("customer_profiles.id"), nullable=True
+    )
+    reviewer_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    note: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_now_utc
     )
@@ -179,3 +206,20 @@ class JourneyAlert(Base):
     resolved_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+
+class EvaluationRun(Base):
+    """Persisted evaluation metrics computed from hidden truth (Gate G6).
+
+    Only the evaluation script writes these; runtime matching never reads
+    hidden truth files.
+    """
+
+    __tablename__ = "evaluation_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_now_utc
+    )
+    metrics: Mapped[dict] = mapped_column(_jsonb(), nullable=False, default=dict)
+    note: Mapped[str | None] = mapped_column(String(500), nullable=True)
