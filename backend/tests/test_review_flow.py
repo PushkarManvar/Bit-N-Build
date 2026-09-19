@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from app.core.enums import ReviewDecision, ReviewStatus
 from app.db.models import (
     CanonicalEvent,
+    CustomerProfile,
     JourneyAlert,
     MatchDecision,
     ProfileIdentifier,
@@ -189,12 +190,20 @@ def test_approve_link_triggers_repeat_contact_alert(
     assert repeat_alerts == 1
 
 
-def test_reject_link_creates_separate_profile(
+def test_reject_link_leaves_event_unlinked_without_new_profile(
     client, db_session
 ) -> None:
+    """Rejecting a candidate must not create a profile or claim identifiers.
+
+    docs/02_USER_WORKFLOWS_AND_UX.md §5: "Candidate is rejected; event remains
+    unresolved or another candidate is considered."
+    """
     canonical_id, anonymous_profile = _build_review_case(client, db_session)
     decision = db_session.scalar(
         select(MatchDecision).where(MatchDecision.canonical_event_id == uuid.UUID(canonical_id))
+    )
+    profiles_before = int(
+        db_session.scalar(select(func.count()).select_from(CustomerProfile)) or 0
     )
 
     response = client.post(
@@ -210,12 +219,35 @@ def test_reject_link_creates_separate_profile(
     body = response.json()
     assert body["action"] == "reject_link"
     assert body["review_status"] == "rejected"
-    assert body["profile_id"] != anonymous_profile
+    assert body["profile_id"] is None
+
+    # No new profile, and the event is not attached to the rejected candidate.
+    profiles_after = int(
+        db_session.scalar(select(func.count()).select_from(CustomerProfile)) or 0
+    )
+    assert profiles_after == profiles_before
 
     canonical = db_session.get(CanonicalEvent, uuid.UUID(canonical_id))
-    assert canonical.profile_id is not None
+    assert canonical.profile_id is None
+
+    # The rejected candidate keeps its identifiers.
+    candidate_identifiers = db_session.scalars(
+        select(ProfileIdentifier).where(
+            ProfileIdentifier.profile_id == uuid.UUID(anonymous_profile)
+        )
+    ).all()
+    assert {(row.type, row.value) for row in candidate_identifiers} == {("device_id", "DEV-77")}
+
     db_session.refresh(decision)
     assert decision.review_status == ReviewStatus.REJECTED
+    assert decision.profile_id is None
+
+    # Audit record still written.
+    audit = db_session.scalars(
+        select(ReviewAction).where(ReviewAction.match_decision_id == decision.id)
+    ).all()
+    assert len(audit) == 1
+    assert audit[0].action == ReviewDecision.REJECT_LINK
 
 
 def test_create_profile_action(client, db_session) -> None:

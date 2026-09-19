@@ -50,7 +50,7 @@ class ReviewResolution:
     match_decision_id: str
     review_status: str
     action: ReviewDecision
-    profile_id: str
+    profile_id: str | None
     resolved_at: datetime
 
 
@@ -133,6 +133,7 @@ def resolve_review(
         )
     canonical = _get_canonical(db, decision)
 
+    profile: CustomerProfile | None = None
     if action == ReviewDecision.APPROVE_LINK:
         if not selected_profile_id:
             raise ReviewError(
@@ -144,7 +145,9 @@ def resolve_review(
         attach_event_to_profile(db, canonical, canonical, profile)
         decision.review_status = ReviewStatus.APPROVED
     elif action == ReviewDecision.REJECT_LINK:
-        profile = create_profile_for_event(db, canonical, canonical)
+        # The candidate is rejected: the event stays unresolved so it can be
+        # matched to another candidate or reviewed again. No profile is
+        # created and no identifier is claimed (docs/02_USER_WORKFLOWS_AND_UX.md §5).
         decision.review_status = ReviewStatus.REJECTED
     elif action == ReviewDecision.CREATE_PROFILE:
         profile = create_profile_for_event(db, canonical, canonical)
@@ -156,7 +159,8 @@ def resolve_review(
             http_status=422,
         )
 
-    decision.profile_id = profile.id
+    # ``reject_link`` leaves the event unlinked; the other actions attach it.
+    decision.profile_id = profile.id if profile is not None else None
     selected_uuid = uuid.UUID(selected_profile_id) if selected_profile_id else None
     db.add(
         ReviewAction(
@@ -170,13 +174,14 @@ def resolve_review(
     # The session is created with autoflush=False, so flush the link before
     # the analyzer queries the profile's events.
     db.flush()
-    analyze_profile(db, profile.id)
+    if profile is not None:
+        analyze_profile(db, profile.id)
     db.commit()
 
     return ReviewResolution(
         match_decision_id=str(decision.id),
         review_status=decision.review_status.value,
         action=action,
-        profile_id=str(profile.id),
+        profile_id=str(profile.id) if profile is not None else None,
         resolved_at=datetime.now(UTC),
     )

@@ -46,5 +46,5 @@ class ResolveReviewResponse(BaseModel):
     match_decision_id: str
     review_status: str
     action: ReviewDecision
-    profile_id: str
+    profile_id: str | None = None
     resolved_at: datetime
