@@ -22,6 +22,7 @@ Read these documents in order when joining the project:
 | 16 | `14_CUSTOMER_AND_JOURNEY_DATA_VARIETY_PLAN.md` | Planned backend/data work for varied, truthful customer and journey views |
 | 17 | `15_COMMAND_CENTRE_SIGNAL_INTEGRITY_PLAN.md` | Planned backend/data work for a truthful, varied Command Centre |
 | 18 | `16_DATA_PIPELINE_READ_MODEL_PLAN.md` | Ordered backend/data/frontend work for a truthful pipeline snapshot, event stream, inspector, and polling |
+| 19 | `17_PIPELINE_EVENT_NARRATIVE_PLAN.md` | Planned safe, specific event narratives and clock clarity for the Data Pipeline |
 
 Repository-level instructions:
 
