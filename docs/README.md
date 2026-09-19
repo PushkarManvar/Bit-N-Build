@@ -19,6 +19,7 @@ Read these documents in order when joining the project:
 | 13 | `11_TOOLING_REFERENCES.md` | Primary references for OpenCode, Docker, and CI |
 | 14 | `12_STITCH_FRONTEND_IMPLEMENTATION_GUIDE.md` | Screen-by-screen frontend plan reconciled with the live backend contract |
 | 15 | `13_REVIEW_QUEUE_DATA_VARIETY_PLAN.md` | Planned backend/data work for a small, varied, truthful Review Queue |
+| 16 | `14_CUSTOMER_AND_JOURNEY_DATA_VARIETY_PLAN.md` | Planned backend/data work for varied, truthful customer and journey views |
 
 Repository-level instructions:
 
