@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   ChevronDown,
@@ -10,7 +10,7 @@ import {
   RefreshCw,
   Search,
 } from "lucide-react";
-import { ApiClientError, getPipelineEvents, getPipelineOverview } from "@/lib/api";
+import { ApiClientError, getPipelineEvents, getPipelineOverview, getPipelineUpdates } from "@/lib/api";
 import type {
   Channel,
   IdentityOutcome,
@@ -31,6 +31,7 @@ import { Panel } from "@/components/ui/Panel";
 import { EventInspector } from "@/components/pipeline/EventInspector";
 
 const PAGE_SIZE = 25;
+const POLL_INTERVAL_MS = 5_000;
 
 type EventFilters = {
   channel: Channel | "";
@@ -70,6 +71,14 @@ function hasFilters(filters: EventFilters): boolean {
   );
 }
 
+function newestFirst(events: PipelineEventOut[]): PipelineEventOut[] {
+  const unique = new Map(events.map((event) => [event.raw_event_id, event]));
+  return [...unique.values()].sort((left, right) => {
+    const receivedAtOrder = right.received_at.localeCompare(left.received_at);
+    return receivedAtOrder || right.raw_event_id.localeCompare(left.raw_event_id);
+  });
+}
+
 export function PipelineView() {
   const [overview, setOverview] = useState<PipelineOverviewResponse | null>(null);
   const [events, setEvents] = useState<PipelineEventOut[]>([]);
@@ -81,6 +90,9 @@ export function PipelineView() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<ApiClientError | null>(null);
   const [selectedRawEventId, setSelectedRawEventId] = useState<string | null>(null);
+  const [pollError, setPollError] = useState<string | null>(null);
+  const pollCursorRef = useRef<string | null>(null);
+  const pollingRef = useRef(false);
 
   const loadOverview = useCallback(async () => {
     setLoading(true);
@@ -92,6 +104,8 @@ export function PipelineView() {
       setNextCursor(response.next_cursor);
       setTotal(null);
       setFilters(initialFilters);
+      setPollError(null);
+      pollCursorRef.current = response.poll_cursor;
     } catch (caught) {
       setError(
         caught instanceof ApiClientError
@@ -176,6 +190,57 @@ export function PipelineView() {
     return `${events.length} most recent persisted events`;
   }, [events.length, total]);
 
+  const filtered = hasFilters(filters);
+
+  const pollPipeline = useCallback(async () => {
+    if (pollingRef.current || !pollCursorRef.current || document.visibilityState === "hidden") return;
+
+    pollingRef.current = true;
+    let cursor = pollCursorRef.current;
+    let upperBoundCursor: string | undefined;
+    const newEvents: PipelineEventOut[] = [];
+    try {
+      while (cursor) {
+        const update = await getPipelineUpdates({
+          cursor,
+          upperBoundCursor,
+          limit: 100,
+        });
+        newEvents.push(...update.events);
+        cursor = update.next_cursor;
+        upperBoundCursor = update.upper_bound_cursor;
+
+        if (!update.has_more) {
+          pollCursorRef.current = update.next_cursor;
+          setOverview((current) => current && {
+            ...current,
+            as_of: update.as_of,
+            stages: update.stages,
+            channels: update.channels,
+            poll_cursor: update.next_cursor,
+          });
+          break;
+        }
+      }
+      if (!filtered && newEvents.length > 0) {
+        setEvents((current) => newestFirst([...newEvents, ...current]));
+      }
+      setPollError(null);
+    } catch (caught) {
+      const message = caught instanceof ApiClientError
+        ? caught.message
+        : "Pipeline updates are temporarily unavailable.";
+      setPollError(message);
+    } finally {
+      pollingRef.current = false;
+    }
+  }, [filtered]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => void pollPipeline(), POLL_INTERVAL_MS);
+    return () => window.clearInterval(intervalId);
+  }, [pollPipeline]);
+
   if (loading) {
     return <PipelineSkeleton />;
   }
@@ -191,8 +256,6 @@ export function PipelineView() {
     );
   }
 
-  const filtered = hasFilters(filters);
-
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -205,11 +268,12 @@ export function PipelineView() {
             Inspect persisted events, normalization outcomes, and explainable identity decisions.
           </p>
         </div>
-        <div className="flex items-center gap-3 text-xs text-[#667085]">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-[#667085]">
           <span className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 font-medium text-teal-800">
             <span className="h-2 w-2 rounded-full bg-[#0F766E]" aria-hidden="true" />
-            Snapshot from {formatTimestamp(overview.as_of)}
+            Polling every 5 seconds
           </span>
+          <span>Snapshot from {formatTimestamp(overview.as_of)}</span>
           <Button
             variant="outline"
             size="sm"
@@ -220,6 +284,15 @@ export function PipelineView() {
           </Button>
         </div>
       </header>
+
+      {pollError && (
+        <div role="status" className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+          <span>Live updates are delayed. The displayed snapshot remains available.</span>
+          <Button variant="outline" size="sm" onClick={() => void pollPipeline()}>
+            Retry updates
+          </Button>
+        </div>
+      )}
 
       <section aria-labelledby="pipeline-stages-heading">
         <div className="mb-3 flex items-center justify-between gap-3">
