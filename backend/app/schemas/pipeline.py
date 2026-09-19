@@ -1,10 +1,12 @@
 """Data Pipeline read-model schemas (docs/05_API_CONTRACT.md section 10)."""
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel
 
-from app.core.enums import Channel, EventType, IdentityOutcome, ProcessingStatus
+from app.core.enums import Channel, EventType, IdentityOutcome, ProcessingStatus, ReviewStatus
+from app.schemas.events import CanonicalEventDetail, RawEventDetail
 
 
 class PipelineStageCounts(BaseModel):
@@ -44,6 +46,42 @@ class PipelineEventOut(BaseModel):
     identity_outcome: IdentityOutcome | None = None
     identity_score: int | None = None
     needs_review: bool
+
+
+class PipelineEventListResponse(BaseModel):
+    items: list[PipelineEventOut]
+    total: int
+    next_cursor: str | None = None
+
+
+class PipelineIdentityDecisionOut(BaseModel):
+    canonical_event_id: str
+    selected_profile_id: str | None = None
+    outcome: IdentityOutcome
+    score: int
+    thresholds: dict[str, int]
+    evidence: list[dict[str, Any]]
+    conflicts: list[dict[str, Any]]
+    candidates: list[dict[str, Any]]
+    reason: str | None = None
+    review_status: ReviewStatus | None = None
+
+
+class PipelineEventDetailResponse(BaseModel):
+    event: PipelineEventOut
+    raw_event: RawEventDetail
+    canonical_event: CanonicalEventDetail | None = None
+    identity_decision: PipelineIdentityDecisionOut | None = None
+
+
+class PipelineUpdatesResponse(BaseModel):
+    as_of: datetime
+    stages: PipelineStageCounts
+    channels: PipelineChannels
+    events: list[PipelineEventOut]
+    next_cursor: str
+    upper_bound_cursor: str
+    has_more: bool
 
 
 class PipelineOverviewResponse(BaseModel):

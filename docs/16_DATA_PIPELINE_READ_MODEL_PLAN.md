@@ -169,7 +169,7 @@ Rules:
 ### 5.3 Incremental polling
 
 ```text
-GET /api/pipeline/updates?cursor=<opaque>&limit=100
+GET /api/pipeline/updates?cursor=<opaque>&limit=100&upper_bound_cursor=<opaque-when-draining>
 ```
 
 For every poll:
@@ -178,7 +178,10 @@ For every poll:
 2. select rows strictly after the supplied cursor and at or below the upper bound;
 3. return rows in ascending receipt order;
 4. return `has_more: true` when the limit is reached; and
-5. advance to the captured upper bound only when all rows through it have been delivered.
+5. return that captured high-water value as `upper_bound_cursor`; and
+6. advance to the captured upper bound only when all rows through it have been delivered.
+
+If `has_more` is true, the client repeats the request with `cursor=next_cursor` and the same `upper_bound_cursor`. This makes the high-water boundary stable while a burst is drained.
 
 The response also returns authoritative stage and channel counts so the frontend replaces its cards after each successful poll. A 101-event test must prove that burst paging loses and repeats nothing.
 
@@ -288,9 +291,9 @@ Each task should normally fit within two hours and end in a focused commit.
 | 2 | Add clean-database and seeded composition diagnostics for stage/channel counts and clock ordering. | `backend/tests/`, optional read-only script | Exact counts on an empty DB and deterministic seed. |
 | 3 | Implement the deep pipeline read-model module and initial snapshot without polling. | `services/pipeline_read_model.py` | Service tests cover every count definition and null behavior. |
 | 4 | Add `/api/pipeline/overview` and shared-envelope errors. | `api/routes/pipeline.py`, router | API contract tests for empty, mixed, and failed datasets. |
-| 5 | Add filtered keyset pagination for `/api/pipeline/events`. | service, schemas, route | Equal timestamps, filter-before-count, stable next page, invalid cursor 422. |
-| 6 | Add the composed inspector detail endpoint. | service, schemas, route | Normalized, failed, review-required, invalid UUID, and missing UUID tests. |
-| 7 | Add high-water cursor polling and authoritative aggregate refresh. | service, route | Empty origin, equal timestamps, 101-event burst, no loss/duplicates. |
+| 5 | Add filtered keyset pagination for `/api/pipeline/events`. | service, schemas, route | Done: equal timestamps, filter-before-count, stable next page, invalid cursor 422. |
+| 6 | Add the composed inspector detail endpoint. | service, schemas, route | Done: normalized, failed, review-required, malformed-ID, and missing-ID tests. |
+| 7 | Add high-water cursor polling and authoritative aggregate refresh. | service, route | Done: empty origin and 101-event burst prove no loss or duplicates. |
 | 8 | Add only the indexes proven useful by the final queries. | new Alembic migration | Clean PostgreSQL migration and query-plan review. |
 | 9 | Add frontend types and request functions. | `frontend/lib/types.ts`, `frontend/lib/api.ts` | Typecheck plus contract fixture tests. |
 | 10 | Build stage/channel cards and the real event stream. | `components/pipeline/`, pipeline page | Loading, empty, filtered-empty, failure, and success states. |

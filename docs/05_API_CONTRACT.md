@@ -1,9 +1,9 @@
 # JourneyLens API Contract
 
-**Version:** 1.1 — Phase 0 / Gate G1 frozen  
+**Version:** 1.2 — Phase 0 / Gate G1 frozen
 **Base path:** `/api`  
 **Format:** JSON unless documented otherwise  
-**Change note (v1.0 → v1.1):** event envelope flattened; channels renamed to `call_center`; processing states reduced to `received|normalized|failed`; identity outcomes separated from review decisions; event types enumerated. Breaking changes were approved during the Phase 0 contract freeze.
+**Change note (v1.1 → v1.2):** additive Data Pipeline event-list, inspector, and polling contracts; no frozen ingestion, identity, or journey endpoint changes.
 
 ## 1. API conventions
 
@@ -132,6 +132,7 @@ Stable error codes:
 | `EVENT_ID_REUSED` | 409 | Same source ID, different payload |
 | `NORMALIZATION_FAILED` | 202 | Raw persisted, normalization failed |
 | `INGESTION_ERROR` | 500 | Unexpected failure |
+| `PIPELINE_EVENT_NOT_FOUND` | 404 | No persisted raw event has the requested pipeline ID |
 
 ### Ingestion response (frozen)
 
@@ -541,7 +542,7 @@ Return `null` for metrics that have not been computed. Do not return invented de
 
 ### `GET /api/pipeline/overview`
 
-Returns one unfiltered, internally consistent initial snapshot for the Data Pipeline page. `limit` controls only the number of recent event rows and must be between 1 and 100; it defaults to `25`. Filtered keyset pagination and polling are additive follow-up contracts.
+Returns one unfiltered, internally consistent initial snapshot for the Data Pipeline page. `limit` controls only the number of recent event rows and must be between 1 and 100; it defaults to `25`. The snapshot captures an opaque high-water position before it reads rows and aggregates; PostgreSQL uses repeatable-read isolation for that request.
 
 ```json
 {
@@ -578,8 +579,8 @@ Returns one unfiltered, internally consistent initial snapshot for the Data Pipe
       "needs_review": false
     }
   ],
-  "next_cursor": null,
-  "poll_cursor": null,
+  "next_cursor": "opaque-or-null",
+  "poll_cursor": "opaque-high-water-cursor",
   "duplicate_attempts": null,
   "duplicate_tracking_supported": false
 }
@@ -604,7 +605,65 @@ Event-row rules:
 - The list never includes raw payloads, full identifiers, candidates, or evidence values.
 - Duplicate attempts remain `null`/unsupported because the current idempotency contract creates no persisted duplicate-attempt row.
 
-`next_cursor` and `poll_cursor` are reserved nullable fields in this first slice. They become non-null only when the versioned pagination and polling contracts are implemented.
+`next_cursor` is present only if an older overview page exists. `poll_cursor` is always an opaque update cursor, including for an empty database; callers use it with `GET /api/pipeline/updates`.
+
+### `GET /api/pipeline/events`
+
+Returns a filtered, keyset-paginated list of the same list-safe event rows shown by the overview. Supported optional filters are `channel`, `processing_status`, `identity_outcome`, and the case-insensitive `source_event_id` prefix. `limit` defaults to `25` and must be between 1 and 100.
+
+```json
+{
+  "items": ["PipelineEventOut"],
+  "total": 42,
+  "next_cursor": "opaque-or-null"
+}
+```
+
+Rows are ordered by `received_at DESC`, then `raw_event_id DESC`. Filters apply before both `total` and pagination. The opaque cursor includes the ordering pair and a fingerprint of the active filters; using it with different filters returns the shared `VALIDATION_ERROR` envelope with HTTP 422.
+
+### `GET /api/pipeline/events/{raw_event_id}`
+
+Returns one composed pipeline inspector model:
+
+```json
+{
+  "event": "PipelineEventOut",
+  "raw_event": "RawEventDetail",
+  "canonical_event": "CanonicalEventDetail-or-null",
+  "identity_decision": {
+    "canonical_event_id": "uuid",
+    "selected_profile_id": "uuid-or-null",
+    "outcome": "auto_linked|review_required|new_profile",
+    "score": 100,
+    "thresholds": {},
+    "evidence": [],
+    "conflicts": [],
+    "candidates": [],
+    "reason": "persisted decision reason",
+    "review_status": "pending|resolved|null"
+  }
+}
+```
+
+The route is keyed by `raw_event_id`; canonical and decision objects are nullable when normalization did not create downstream records. A malformed or unknown ID returns `PIPELINE_EVENT_NOT_FOUND` with HTTP 404 through the shared error envelope.
+
+### `GET /api/pipeline/updates`
+
+Returns events newer than an overview or previous update cursor. `cursor` is required; `limit` defaults to `100` and must be between 1 and 100. Events are ascending by `received_at`, then `raw_event_id`.
+
+```json
+{
+  "as_of": "2026-09-20T12:00:05Z",
+  "stages": { "raw_accepted": 2 },
+  "channels": { "web": { "raw": 2, "normalized": 1, "failed": 1 } },
+  "events": ["PipelineEventOut"],
+  "next_cursor": "opaque-update-cursor",
+  "upper_bound_cursor": "opaque-high-water-cursor",
+  "has_more": false
+}
+```
+
+Each response captures an upper high-water position and scopes both its event rows and authoritative aggregates to that position. When `has_more` is `true`, the caller must request the next page with `cursor=next_cursor` and the same `upper_bound_cursor`; this drains a burst without losses or duplicates. When `has_more` is `false`, `next_cursor` equals `upper_bound_cursor` and becomes the cursor for the next poll.
 
 ### Initial pipeline examples
 
