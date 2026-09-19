@@ -17,6 +17,7 @@ Read these documents in order when joining the project:
 | 11 | `09_GITHUB_AND_COLLABORATION.md` | Repository settings, CI, branches, onboarding |
 | 12 | `10_REMAINING_DOCUMENTS_REGISTER.md` | Documents needed later and their trigger points |
 | 13 | `11_TOOLING_REFERENCES.md` | Primary references for OpenCode, Docker, and CI |
+| 14 | `12_STITCH_FRONTEND_IMPLEMENTATION_GUIDE.md` | Screen-by-screen frontend plan reconciled with the live backend contract |
 
 Repository-level instructions:
 
