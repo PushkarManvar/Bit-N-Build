@@ -543,6 +543,18 @@ Return `null` for metrics that have not been computed. Do not return invented de
 
 Resets demo-specific records and reloads base fixtures. It must not be exposed as a production operation.
 
+```json
+{
+  "status": "reset",
+  "loaded": {
+    "received": 189,
+    "duplicates": 6,
+    "failed": 2,
+    "invalid": 2
+  }
+}
+```
+
 ### `POST /api/demo/start`
 
 ```json
@@ -579,6 +591,32 @@ Response:
 ### `GET /api/dashboard/updates?since={timestamp}`
 
 Returns recent processed events, new alerts, changed review counts, and current demo status.
+
+```json
+{
+  "events": [
+    {
+      "event_id": "uuid",
+      "channel": "mobile_app",
+      "event_type": "support_contacted",
+      "occurred_at": "2026-09-15T09:00:00Z",
+      "profile_id": "uuid-or-null",
+      "match_decision": "auto_linked"
+    }
+  ],
+  "new_alerts": [],
+  "open_alerts": 2,
+  "pending_reviews": 1,
+  "demo": {
+    "run_id": "demo-run-01",
+    "status": "running",
+    "current_step": 3,
+    "total_steps": 6,
+    "last_event_id": "uuid",
+    "error": null
+  }
+}
+```
 
 ## 11. Contract governance
 
