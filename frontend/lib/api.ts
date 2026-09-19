@@ -7,6 +7,7 @@ import type {
   AlertListResponse,
   AnalyticsOverview,
   ApiErrorDetail,
+  Channel,
   ChannelsResponse,
   DashboardUpdatesResponse,
   DemoResetResponse,
@@ -15,6 +16,12 @@ import type {
   DemoStartResponse,
   HealthResult,
   MatchExplanationResponse,
+  PipelineEventDetailResponse,
+  PipelineEventListResponse,
+  PipelineOverviewResponse,
+  PipelineUpdatesResponse,
+  IdentityOutcome,
+  ProcessingStatus,
   ProfileJourneyResponse,
   ProfileListResponse,
   ResolveReviewRequest,
@@ -241,6 +248,93 @@ export async function getDashboardUpdates(
   });
 
   return handleResponse<DashboardUpdatesResponse>(response);
+}
+
+export async function getPipelineOverview(params?: {
+  limit?: number;
+  signal?: AbortSignal;
+}): Promise<PipelineOverviewResponse> {
+  const baseUrl = getBaseUrl();
+  const searchParams = new URLSearchParams();
+  if (params?.limit) searchParams.set("limit", String(params.limit));
+
+  const query = searchParams.toString();
+  const response = await fetch(`${baseUrl}/api/pipeline/overview${query ? `?${query}` : ""}`, {
+    cache: "no-store",
+    signal: params?.signal ?? AbortSignal.timeout(5_000),
+  });
+
+  return handleResponse<PipelineOverviewResponse>(response);
+}
+
+export async function getPipelineEvents(params?: {
+  limit?: number;
+  cursor?: string;
+  channel?: Channel;
+  processingStatus?: ProcessingStatus;
+  identityOutcome?: IdentityOutcome;
+  sourceEventId?: string;
+  signal?: AbortSignal;
+}): Promise<PipelineEventListResponse> {
+  const baseUrl = getBaseUrl();
+  const searchParams = new URLSearchParams();
+  if (params?.limit) searchParams.set("limit", String(params.limit));
+  if (params?.cursor) searchParams.set("cursor", params.cursor);
+  if (params?.channel) searchParams.set("channel", params.channel);
+  if (params?.processingStatus) {
+    searchParams.set("processing_status", params.processingStatus);
+  }
+  if (params?.identityOutcome) {
+    searchParams.set("identity_outcome", params.identityOutcome);
+  }
+  if (params?.sourceEventId?.trim()) {
+    searchParams.set("source_event_id", params.sourceEventId.trim());
+  }
+
+  const query = searchParams.toString();
+  const response = await fetch(`${baseUrl}/api/pipeline/events${query ? `?${query}` : ""}`, {
+    cache: "no-store",
+    signal: params?.signal ?? AbortSignal.timeout(5_000),
+  });
+
+  return handleResponse<PipelineEventListResponse>(response);
+}
+
+export async function getPipelineEventDetail(
+  rawEventId: string,
+  signal?: AbortSignal
+): Promise<PipelineEventDetailResponse> {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(
+    `${baseUrl}/api/pipeline/events/${encodeURIComponent(rawEventId)}`,
+    {
+      cache: "no-store",
+      signal: signal ?? AbortSignal.timeout(5_000),
+    }
+  );
+
+  return handleResponse<PipelineEventDetailResponse>(response);
+}
+
+export async function getPipelineUpdates(params: {
+  cursor: string;
+  upperBoundCursor?: string;
+  limit?: number;
+  signal?: AbortSignal;
+}): Promise<PipelineUpdatesResponse> {
+  const baseUrl = getBaseUrl();
+  const searchParams = new URLSearchParams({ cursor: params.cursor });
+  if (params.upperBoundCursor) {
+    searchParams.set("upper_bound_cursor", params.upperBoundCursor);
+  }
+  if (params.limit) searchParams.set("limit", String(params.limit));
+
+  const response = await fetch(`${baseUrl}/api/pipeline/updates?${searchParams.toString()}`, {
+    cache: "no-store",
+    signal: params.signal ?? AbortSignal.timeout(5_000),
+  });
+
+  return handleResponse<PipelineUpdatesResponse>(response);
 }
 
 export async function startDemo(

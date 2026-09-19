@@ -250,6 +250,119 @@ export interface DashboardUpdatesResponse {
   demo: DemoRunResponse | null;
 }
 
+// Data Pipeline Types
+export interface PipelineStageCounts {
+  raw_accepted: number;
+  normalization_succeeded: number;
+  normalization_failed: number;
+  identity_decided: number;
+  profile_linked: number;
+  review_required: number;
+}
+
+export interface PipelineChannelCounts {
+  raw: number;
+  normalized: number;
+  failed: number;
+}
+
+export interface PipelineChannels {
+  web: PipelineChannelCounts;
+  mobile_app: PipelineChannelCounts;
+  call_center: PipelineChannelCounts;
+  physical_store: PipelineChannelCounts;
+}
+
+export interface PipelineEventOut {
+  raw_event_id: string;
+  canonical_event_id: string | null;
+  source_event_id: string;
+  channel: Channel;
+  event_type: EventType | null;
+  occurred_at: string;
+  received_at: string;
+  /** Canonical insert time, not an end-to-end processing duration. */
+  processed_at: string | null;
+  processing_status: ProcessingStatus;
+  processing_error_code: string | null;
+  profile_id: string | null;
+  identity_outcome: IdentityOutcome | null;
+  identity_score: number | null;
+  needs_review: boolean;
+}
+
+export interface PipelineEventListResponse {
+  items: PipelineEventOut[];
+  total: number;
+  next_cursor: string | null;
+}
+
+export interface RawEventDetail {
+  id: string;
+  channel: Channel;
+  source_event_id: string;
+  schema_version: string;
+  occurred_at: string;
+  received_at: string;
+  payload: Record<string, unknown>;
+  processing_status: ProcessingStatus;
+  processing_error: string | null;
+}
+
+export interface CanonicalEventDetail {
+  id: string;
+  raw_event_id: string;
+  channel: Channel;
+  event_type: EventType;
+  occurred_at: string;
+  profile_id: string | null;
+  identifiers: Record<string, unknown>[];
+  entity_references: Record<string, unknown>;
+  attributes: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface PipelineIdentityDecisionOut {
+  canonical_event_id: string;
+  selected_profile_id: string | null;
+  outcome: IdentityOutcome;
+  score: number;
+  thresholds: Record<string, number>;
+  evidence: Record<string, unknown>[];
+  conflicts: Record<string, unknown>[];
+  candidates: Record<string, unknown>[];
+  reason: string | null;
+  review_status: ReviewStatus | null;
+}
+
+export interface PipelineEventDetailResponse {
+  event: PipelineEventOut;
+  raw_event: RawEventDetail;
+  canonical_event: CanonicalEventDetail | null;
+  identity_decision: PipelineIdentityDecisionOut | null;
+}
+
+export interface PipelineOverviewResponse {
+  as_of: string;
+  stages: PipelineStageCounts;
+  channels: PipelineChannels;
+  events: PipelineEventOut[];
+  next_cursor: string | null;
+  poll_cursor: string | null;
+  duplicate_attempts: number | null;
+  duplicate_tracking_supported: boolean;
+}
+
+export interface PipelineUpdatesResponse {
+  as_of: string;
+  stages: PipelineStageCounts;
+  channels: PipelineChannels;
+  events: PipelineEventOut[];
+  next_cursor: string;
+  upper_bound_cursor: string;
+  has_more: boolean;
+}
+
 // Error Envelope Shape
 export interface ApiErrorDetail {
   code: string;

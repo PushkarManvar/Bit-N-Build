@@ -295,7 +295,7 @@ Each task should normally fit within two hours and end in a focused commit.
 | 6 | Add the composed inspector detail endpoint. | service, schemas, route | Done: normalized, failed, review-required, malformed-ID, and missing-ID tests. |
 | 7 | Add high-water cursor polling and authoritative aggregate refresh. | service, route | Done: empty origin and 101-event burst prove no loss or duplicates. |
 | 8 | Add only the indexes proven useful by the final queries. | new Alembic migration, if needed | Done: PostgreSQL query-plan review found no current index worth adding. |
-| 9 | Add frontend types and request functions. | `frontend/lib/types.ts`, `frontend/lib/api.ts` | Typecheck plus contract fixture tests. |
+| 9 | Add frontend types and request functions. | `frontend/lib/types.ts`, `frontend/lib/api.ts` | Done: strict typecheck and lint pass for overview, list, detail, and updates clients. |
 | 10 | Build stage/channel cards and the real event stream. | `components/pipeline/`, pipeline page | Loading, empty, filtered-empty, failure, and success states. |
 | 11 | Build the accessible inspector and ID-safe tabs. | `EventInspector.tsx` | Keyboard tab/dialog checks; raw/canonical IDs never cross. |
 | 12 | Add polling, burst draining, degraded state, and stable selection. | `PipelineView.tsx` | Fake-timer polling tests and 101-event integration case. |
