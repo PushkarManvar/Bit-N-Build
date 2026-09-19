@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
-
 import "./globals.css";
+import { AppShell } from "@/components/shell/AppShell";
 
 export const metadata: Metadata = {
-  title: "JourneyLens",
-  description: "Explainable refund journey resolution",
+  title: "JourneyLens — Operations Console",
+  description: "Explainable refund journey resolution & identity operations",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }
