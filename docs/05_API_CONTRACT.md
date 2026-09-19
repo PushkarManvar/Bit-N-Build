@@ -284,6 +284,12 @@ Stable error codes:
       "source_event_id": "WEB-001",
       "channel": "web",
       "event_type": "product_viewed",
+      "event_summary": {
+        "title": "Product viewed",
+        "detail": null,
+        "kind": "product_view"
+      },
+      "has_order_reference": true,
       "occurred_at": "2026-09-19T08:30:00Z",
       "schema_version": "1.0",
       "identifiers": [
@@ -615,6 +621,11 @@ Event-row rules:
 - Rows are ordered by `received_at DESC`, then `raw_event_id DESC`.
 - `processed_at` is exactly `canonical_events.created_at`: the canonical insert time, not a duration or end-to-end latency measurement. It is `null` when no canonical event exists.
 - Canonical and identity fields are nullable for failed raw events.
+- `event_summary` is a deterministic, list-safe projection of canonical event
+  type plus bounded context. It is `null` when no canonical event exists.
+- `has_order_reference` reports only whether a canonical order reference is
+  present; the list never returns that reference value. It is `null` when no
+  canonical event exists.
 - `processing_error_code` exposes only the stable code before the stored error message.
 - `received` is a valid compatibility state but normal synchronous processing does not leave a committed row in that state. It appears only if a recovery/import path explicitly persists an interrupted record; callers should expect the filter to be empty in ordinary operation.
 - The list never includes raw payloads, full identifiers, candidates, or evidence values.

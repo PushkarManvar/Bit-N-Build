@@ -75,6 +75,12 @@ def test_pipeline_overview_shows_normalized_and_failed_events(
     assert normalized["processing_status"] == "normalized"
     assert normalized["identity_outcome"] == "new_profile"
     assert normalized["identity_score"] == 0
+    assert normalized["event_summary"] == {
+        "title": "Product viewed",
+        "detail": None,
+        "kind": "product_view",
+    }
+    assert normalized["has_order_reference"] is True
     assert normalized["profile_id"] is not None
     assert normalized["needs_review"] is False
 
@@ -85,6 +91,8 @@ def test_pipeline_overview_shows_normalized_and_failed_events(
     assert failed["identity_outcome"] is None
     assert failed["profile_id"] is None
     assert failed["needs_review"] is False
+    assert failed["event_summary"] is None
+    assert failed["has_order_reference"] is None
 
 
 def test_pipeline_overview_exposes_pending_review_without_claiming_a_profile(
@@ -152,6 +160,12 @@ def test_pipeline_events_lists_only_the_requested_identity_outcome(
         "source_event_id": "APP-90099",
         "channel": "mobile_app",
         "event_type": "support_contacted",
+        "event_summary": {
+            "title": "Support contact",
+            "detail": None,
+            "kind": "support_contact",
+        },
+        "has_order_reference": False,
         "occurred_at": "2026-09-15T10:30:00Z",
         "received_at": body["items"][0]["received_at"],
         "processed_at": body["items"][0]["processed_at"],
@@ -340,6 +354,38 @@ def test_pipeline_updates_delivers_events_after_the_overview_cursor(
     assert body["has_more"] is False
     assert body["next_cursor"] == body["upper_bound_cursor"]
     assert body["stages"]["raw_accepted"] == 1
+
+
+def test_pipeline_summary_is_identical_across_read_endpoints(client) -> None:
+    cursor = client.get("/api/pipeline/overview").json()["poll_cursor"]
+    event = {
+        "source_event_id": "CALL-SUMMARY-01",
+        "channel": "call_center",
+        "event_type": "support_contacted",
+        "occurred_at": "2026-09-20T12:00:00Z",
+        "schema_version": "1.0",
+        "identifiers": [],
+        "entity_references": {"order_id": "ORD-204"},
+        "attributes": {"notes": "Refund not received"},
+    }
+    ingested = client.post("/api/events", json=event)
+    assert ingested.status_code == 201
+
+    overview_event = client.get("/api/pipeline/overview").json()["events"][0]
+    listed_response = client.get("/api/pipeline/events?source_event_id=CALL-SUMMARY-01")
+    listed_event = listed_response.json()["items"][0]
+    update_event = client.get(f"/api/pipeline/updates?cursor={cursor}").json()["events"][0]
+    detail_response = client.get(f"/api/pipeline/events/{ingested.json()['raw_event_id']}")
+    detail_event = detail_response.json()["event"]
+
+    expected_summary = {
+        "title": "Support contact",
+        "detail": "Refund not received",
+        "kind": "support_refund_follow_up",
+    }
+    for pipeline_event in (overview_event, listed_event, update_event, detail_event):
+        assert pipeline_event["event_summary"] == expected_summary
+        assert pipeline_event["has_order_reference"] is True
 
 
 def test_pipeline_updates_drains_a_101_event_burst_without_loss_or_duplicates(

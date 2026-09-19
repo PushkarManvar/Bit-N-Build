@@ -21,11 +21,13 @@ from app.schemas.pipeline import (
     PipelineEventDetailResponse,
     PipelineEventListResponse,
     PipelineEventOut,
+    PipelineEventSummary,
     PipelineIdentityDecisionOut,
     PipelineOverviewResponse,
     PipelineStageCounts,
     PipelineUpdatesResponse,
 )
+from app.services.event_presentation import present_event
 
 
 @dataclass(frozen=True)
@@ -361,12 +363,27 @@ def _event_out(
         and decision.outcome == IdentityOutcome.REVIEW_REQUIRED
         and decision.review_status == ReviewStatus.PENDING
     )
+    presentation = (
+        present_event(canonical.event_type, canonical.entity_references, canonical.attributes)
+        if canonical
+        else None
+    )
     return PipelineEventOut(
         raw_event_id=str(raw.id),
         canonical_event_id=str(canonical.id) if canonical else None,
         source_event_id=raw.source_event_id,
         channel=raw.channel,
         event_type=canonical.event_type if canonical else None,
+        event_summary=(
+            PipelineEventSummary(
+                title=presentation.title,
+                detail=presentation.detail,
+                kind=presentation.kind,
+            )
+            if presentation
+            else None
+        ),
+        has_order_reference=presentation.has_order_reference if presentation else None,
         occurred_at=_to_utc(raw.occurred_at),
         received_at=_to_utc(raw.received_at),
         processed_at=_to_utc(canonical.created_at) if canonical else None,
