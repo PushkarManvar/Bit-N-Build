@@ -1,0 +1,91 @@
+{
+  "seed": "curated_review_queue",
+  "events": [
+    {
+      "source_event_id": "CURATED-WEB-CONFLICT-01",
+      "channel": "web",
+      "event_type": "product_viewed",
+      "occurred_at": "2026-09-14T08:00:00Z",
+      "schema_version": "1.0",
+      "identifiers": [{"type": "email", "value": "conflict.a@example.com"}],
+      "entity_references": {},
+      "attributes": {"customer_name": "Conflict Alpha"}
+    },
+    {
+      "source_event_id": "CURATED-WEB-CONFLICT-02",
+      "channel": "web",
+      "event_type": "product_viewed",
+      "occurred_at": "2026-09-14T08:01:00Z",
+      "schema_version": "1.0",
+      "identifiers": [{"type": "phone", "value": "9876500000"}],
+      "entity_references": {},
+      "attributes": {"customer_name": "Conflict Beta"}
+    },
+    {
+      "source_event_id": "CURATED-CALL-CONFLICT-01",
+      "channel": "call_center",
+      "event_type": "support_contacted",
+      "occurred_at": "2026-09-14T09:00:00Z",
+      "schema_version": "1.0",
+      "identifiers": [
+        {"type": "email", "value": "conflict.a@example.com"},
+        {"type": "phone", "value": "9876500000"}
+      ],
+      "entity_references": {},
+      "attributes": {"customer_name": "Conflict Case"}
+    },
+    {
+      "source_event_id": "CURATED-WEB-BRIDGE-01",
+      "channel": "web",
+      "event_type": "product_viewed",
+      "occurred_at": "2026-09-15T08:00:00Z",
+      "schema_version": "1.0",
+      "identifiers": [{"type": "device_id", "value": "DEV-CURATED-BRIDGE"}],
+      "entity_references": {},
+      "attributes": {}
+    },
+    {
+      "source_event_id": "CURATED-APP-BRIDGE-01",
+      "channel": "mobile_app",
+      "event_type": "app_login",
+      "occurred_at": "2026-09-15T08:30:00Z",
+      "schema_version": "1.0",
+      "identifiers": [
+        {"type": "email", "value": "bridge.known@example.com"},
+        {"type": "device_id", "value": "dev-curated-bridge"}
+      ],
+      "entity_references": {},
+      "attributes": {}
+    },
+    {
+      "source_event_id": "CURATED-WEB-AARAV-01",
+      "channel": "web",
+      "event_type": "product_viewed",
+      "occurred_at": "2026-09-16T08:00:00Z",
+      "schema_version": "1.0",
+      "identifiers": [{"type": "email", "value": "aarav.a@example.com"}],
+      "entity_references": {},
+      "attributes": {"customer_name": "Aarav Patel", "city": "Pune"}
+    },
+    {
+      "source_event_id": "CURATED-WEB-AARAV-02",
+      "channel": "web",
+      "event_type": "product_viewed",
+      "occurred_at": "2026-09-16T08:01:00Z",
+      "schema_version": "1.0",
+      "identifiers": [{"type": "email", "value": "aarav.b@example.com"}],
+      "entity_references": {},
+      "attributes": {"customer_name": "Aarav Patel", "city": "Pune"}
+    },
+    {
+      "source_event_id": "CURATED-STORE-AARAV-01",
+      "channel": "physical_store",
+      "event_type": "store_visited",
+      "occurred_at": "2026-09-16T09:00:00Z",
+      "schema_version": "1.0",
+      "identifiers": [],
+      "entity_references": {},
+      "attributes": {"customer_name": "Aarav Patel", "city": "Pune"}
+    }
+  ]
+}

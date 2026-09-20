@@ -26,12 +26,12 @@ def test_review_composition_audit_reports_persisted_evidence_groups(
 
 
 def test_clean_demo_seed_has_an_explainable_pending_review_total(db_session) -> None:
-    loaded = reset_demo(db_session)
+    loaded = reset_demo(db_session, seed="full")
 
     audit = audit_pending_review_composition(db_session)
 
     assert loaded == {"received": 189, "duplicates": 6, "failed": 2, "invalid": 2}
-    assert audit.pending_count == 63
+    assert audit.pending_count == 67
     assert [
         (
             group.channel,
@@ -69,6 +69,22 @@ def test_clean_demo_seed_has_an_explainable_pending_review_total(db_session) -> 
         ),
         (
             "call_center",
+            0,
+            False,
+            (),
+            "a matching name exists, but no identifier evidence supports a link.",
+            2,
+        ),
+        (
+            "physical_store",
+            0,
+            False,
+            (),
+            "a matching name exists, but no identifier evidence supports a link.",
+            2,
+        ),
+        (
+            "call_center",
             100,
             True,
             ("email", "order_id"),
@@ -76,3 +92,25 @@ def test_clean_demo_seed_has_an_explainable_pending_review_total(db_session) -> 
             1,
         ),
     ]
+
+
+def test_curated_demo_seed_exposes_exactly_three_review_archetypes(
+    client, db_session
+) -> None:
+    loaded = reset_demo(db_session, seed="curated")
+
+    audit = audit_pending_review_composition(db_session)
+    queue = client.get("/api/reviews")
+
+    assert loaded == {"received": 8, "duplicates": 0, "failed": 0, "invalid": 0}
+    assert audit.pending_count == 3
+    assert [
+        (group.channel, group.score, group.has_conflicts, group.evidence_fields, group.count)
+        for group in audit.groups
+    ] == [
+        ("call_center", 90, True, ("email",), 1),
+        ("mobile_app", 50, False, ("device_id",), 1),
+        ("physical_store", 0, False, (), 1),
+    ]
+    assert queue.status_code == 200
+    assert queue.json()["total"] == 3

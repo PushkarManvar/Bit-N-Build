@@ -1,7 +1,7 @@
 """Demo controls and dashboard polling endpoints (Gate G7)."""
 
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -23,9 +23,12 @@ DbSession = Annotated[Session, Depends(get_db)]
 
 
 @router.post("/demo/reset", response_model=DemoResetResponse)
-def demo_reset(db: DbSession) -> DemoResetResponse:
-    """Wipe operational data and reload synthetic base fixtures (demo only)."""
-    loaded = reset_demo(db)
+def demo_reset(
+    db: DbSession,
+    seed: Annotated[Literal["curated", "full"], Query()] = "curated",
+) -> DemoResetResponse:
+    """Wipe operational data and reload the selected synthetic demo seed."""
+    loaded = reset_demo(db, seed=seed)
     return DemoResetResponse(status="reset", loaded=loaded)
 
 

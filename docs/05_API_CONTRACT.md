@@ -702,18 +702,22 @@ The backend contract tests cover these snapshots:
 
 ## 11. Demo controls
 
-### `POST /api/demo/reset`
+### `POST /api/demo/reset?seed=curated|full`
 
-Resets demo-specific records and reloads base fixtures. It must not be exposed as a production operation.
+Resets demo-specific records and reloads deterministic synthetic fixtures. It
+must not be exposed as a production operation. `seed=curated` is the default
+and loads the three-case review queue (strong conflict, incomplete-evidence
+bridge, and same-name safety). `seed=full` retains the larger data-generation
+fixture set for evaluation work.
 
 ```json
 {
   "status": "reset",
   "loaded": {
-    "received": 189,
-    "duplicates": 6,
-    "failed": 2,
-    "invalid": 2
+    "received": 8,
+    "duplicates": 0,
+    "failed": 0,
+    "invalid": 0
   }
 }
 ```
