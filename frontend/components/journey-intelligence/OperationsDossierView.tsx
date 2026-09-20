@@ -262,10 +262,13 @@ function Stat({
 
 function PriorityDossier({ journey, scoreMax }: { journey: FrictionJourney; scoreMax: number }) {
   return (
-    <section className="overflow-hidden rounded-2xl bg-[#172554] text-white shadow-lg" aria-label="Priority case dossier">
+    <section
+      className="overflow-hidden rounded-xl border border-[#E4E7EC] bg-white text-[#172554] shadow-sm"
+      aria-label="Priority case dossier"
+    >
       <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1fr_auto] lg:items-start">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-200">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600">
             Priority case · inspect first
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -274,30 +277,30 @@ function PriorityDossier({ journey, scoreMax }: { journey: FrictionJourney; scor
               {journey.band}
             </span>
           </div>
-          <p className="mt-2 font-mono text-sm text-slate-300">Order {journey.order_id}</p>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-200">
+          <p className="mt-2 font-mono text-sm text-[#667085]">Order {journey.order_id}</p>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-[#475467]">
             This case is ranked because its persisted evidence adds up to the score below. Review
             status is a risk signal only; it never means an event was automatically linked.
           </p>
         </div>
-        <div className="rounded-xl border border-white/15 bg-white/10 px-5 py-3 text-right">
-          <p className="text-xs uppercase tracking-wide text-slate-300">Friction score</p>
-          <p className="mt-1 text-4xl font-bold tabular-nums">
-            {journey.friction_score}<span className="text-lg text-slate-300">/{scoreMax}</span>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 text-right">
+          <p className="text-xs uppercase tracking-wide text-[#667085]">Friction score</p>
+          <p className="mt-1 text-4xl font-bold tabular-nums text-[#172554]">
+            {journey.friction_score}<span className="text-lg text-[#667085]">/{scoreMax}</span>
           </p>
         </div>
       </div>
-      <div className="border-t border-white/10 bg-slate-950/15 px-6 py-5">
+      <div className="border-t border-slate-100 bg-slate-50/70 px-6 py-5">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h3 className="text-sm font-semibold">Score decomposition</h3>
-          <span className="text-xs text-slate-300">Points come from deterministic rules</span>
+          <span className="text-xs text-[#667085]">Points come from deterministic rules</span>
         </div>
         <div className="grid gap-2 sm:grid-cols-5">
           {scoreParts.map(([key, label, color]) => (
-            <div key={key} className="rounded-lg border border-white/10 bg-white/5 p-3">
+            <div key={key} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
               <div className={`h-1.5 rounded-full ${color}`} />
               <p className="mt-3 text-2xl font-bold tabular-nums">+{journey.components[key]}</p>
-              <p className="mt-1 text-xs leading-4 text-slate-300">{label}</p>
+              <p className="mt-1 text-xs leading-4 text-[#667085]">{label}</p>
             </div>
           ))}
         </div>
