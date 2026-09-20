@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "JourneyLens: Explainable Identity to Action",
+    "quality_profile": "showcase",
+    "animation": "none",
+    "viewBox": [1120, 720],
+    "views": [
+      {
+        "id": "golden_path",
+        "label": "Golden path",
+        "focus": ["sources", "event_api", "raw_store", "normalizer", "identity", "core_stores", "journey_rules", "alert_store", "query_api", "nextjs"],
+        "note": "Trace one source event from immutable evidence to an explained decision and an operational alert."
+      },
+      {
+        "id": "safety_boundary",
+        "label": "Identity safety",
+        "focus": ["normalizer", "identity", "core_stores"],
+        "note": "Strong conflicts stop automatic linking; weak name similarity can only support review."
+      },
+      {
+        "id": "evaluation_isolation",
+        "label": "Evaluation isolation",
+        "focus": ["hidden_truth", "evaluator", "core_stores"],
+        "note": "Hidden truth is read only by the offline evaluator, never by runtime matching."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "sources",
+      "type": "external",
+      "label": "4 Synthetic Channels",
+      "sublabel": "web · app · call centre · store",
+      "pos": [20, 275],
+      "size": [150, 76]
+    },
+    {
+      "id": "event_api",
+      "type": "backend",
+      "label": "Event API",
+      "sublabel": "FastAPI · POST /api/events",
+      "pos": [200, 275],
+      "size": [150, 76]
+    },
+    {
+      "id": "raw_store",
+      "type": "database",
+      "label": "Raw Event Store",
+      "sublabel": "Bronze · immutable payloads",
+      "pos": [380, 105],
+      "size": [150, 76]
+    },
+    {
+      "id": "normalizer",
+      "type": "backend",
+      "label": "Normalizer",
+      "sublabel": "canonical fields + validation",
+      "pos": [380, 275],
+      "size": [150, 76]
+    },
+    {
+      "id": "identity",
+      "type": "security",
+      "label": "Identity Resolver",
+      "sublabel": "deterministic evidence + conflicts",
+      "tag": "name alone never links",
+      "pos": [560, 275],
+      "size": [160, 76]
+    },
+    {
+      "id": "core_stores",
+      "type": "database",
+      "label": "Profiles + Decisions",
+      "sublabel": "Silver · canonical identity",
+      "pos": [750, 275],
+      "size": [160, 76]
+    },
+    {
+      "id": "journey_rules",
+      "type": "backend",
+      "label": "Journey Rules",
+      "sublabel": "refund + repeat-contact logic",
+      "pos": [750, 105],
+      "size": [160, 76]
+    },
+    {
+      "id": "alert_store",
+      "type": "database",
+      "label": "Journey Alerts",
+      "sublabel": "Gold · deduplicated open issues",
+      "pos": [940, 105],
+      "size": [160, 76]
+    },
+    {
+      "id": "query_api",
+      "type": "backend",
+      "label": "Query APIs",
+      "sublabel": "profiles · reviews · metrics",
+      "pos": [940, 275],
+      "size": [160, 76]
+    },
+    {
+      "id": "nextjs",
+      "type": "frontend",
+      "label": "Next.js Interface",
+      "sublabel": "journeys · review · pipeline",
+      "pos": [940, 465],
+      "size": [160, 76]
+    },
+    {
+      "id": "hidden_truth",
+      "type": "external",
+      "label": "Hidden Truth Files",
+      "sublabel": "data/truth · offline only",
+      "pos": [380, 500],
+      "size": [150, 70]
+    },
+    {
+      "id": "evaluator",
+      "type": "backend",
+      "label": "Evaluation Script",
+      "sublabel": "precision · recall · F1 · alerts",
+      "pos": [560, 500],
+      "size": [160, 70]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "JourneyLens modular monolith",
+      "wraps": ["event_api", "normalizer", "identity", "journey_rules", "query_api", "evaluator"],
+      "pad": 18
+    },
+    {
+      "kind": "region",
+      "label": "PostgreSQL evidence and insight",
+      "wraps": ["raw_store", "core_stores", "alert_store"],
+      "pad": 14
+    }
+  ],
+  "connections": [
+    {"id": "ingest", "from": "sources", "to": "event_api", "label": "channel envelopes", "variant": "emphasis", "labelAt": [185, 258]},
+    {"id": "preserve", "from": "event_api", "to": "raw_store", "label": "persist first", "variant": "emphasis", "labelAt": [360, 204]},
+    {"id": "normalize", "from": "event_api", "to": "normalizer", "label": "validate + normalize", "labelAt": [365, 374]},
+    {"id": "resolve", "from": "normalizer", "to": "identity", "label": "canonical event", "variant": "emphasis", "labelAt": [545, 258]},
+    {"id": "persist_decision", "from": "identity", "to": "core_stores", "label": "profile link + explanation", "variant": "security", "labelAt": [640, 378]},
+    {"id": "analyze", "from": "core_stores", "to": "journey_rules", "label": "chronological journey"},
+    {"id": "raise_alert", "from": "journey_rules", "to": "alert_store", "label": "rule-backed alerts", "variant": "emphasis", "labelAt": [925, 198]},
+    {"id": "query_profiles", "from": "core_stores", "to": "query_api", "label": "profiles + decisions", "labelAt": [925, 378]},
+    {"id": "query_alerts", "from": "alert_store", "to": "query_api", "label": "open issues", "labelAt": [1070, 225]},
+    {"id": "serve_ui", "from": "query_api", "to": "nextjs", "label": "typed JSON over HTTP", "variant": "emphasis", "labelAt": [1070, 410]},
+    {"id": "truth_to_eval", "from": "hidden_truth", "to": "evaluator", "label": "expected identities + alerts", "variant": "dashed", "labelAt": [545, 595]},
+    {"id": "runtime_to_eval", "from": "core_stores", "to": "evaluator", "label": "persisted outcomes", "variant": "dashed", "labelAt": [670, 430]}
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "Explainable by design",
+      "items": ["Every automated link stores field-level evidence and thresholds.", "A strong identifier conflict always routes to human review."]
+    },
+    {
+      "dot": "emerald",
+      "title": "Truthful data layers",
+      "items": ["Bronze preserves raw inputs; Silver stores canonical identity state; Gold exposes alerts and computed metrics.", "Unknown telemetry stays null instead of being estimated."]
+    },
+    {
+      "dot": "amber",
+      "title": "Deliberate scope",
+      "items": ["Synchronous modular monolith with polling for the demo baseline.", "No Kafka, Redis, background queue, or LLM identity decisions."]
+    }
+  ]
+}
