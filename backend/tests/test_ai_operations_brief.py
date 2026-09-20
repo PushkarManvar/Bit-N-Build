@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import pytest
 
 from app.core.config import Settings
+from app.core.errors import AppError
 from app.schemas.analytics import (
     FrictionAgeDistributionBucket,
     FrictionJourney,
@@ -101,3 +102,30 @@ def test_retryable_primary_failure_uses_the_backup_provider(monkeypatch) -> None
 
     assert response.provider == "groq"
     assert response.model == "test-backup"
+
+
+@pytest.mark.parametrize(
+    ("focus_alert_id", "highlighted_signal"),
+    [
+        ("invented-alert", "unresolved_age"),
+        ("alert-1", "repeat_contact"),
+    ],
+)
+def test_hallucinated_brief_claims_are_rejected_before_reaching_the_ui(
+    monkeypatch, focus_alert_id: str, highlighted_signal: str
+) -> None:
+    def fake_google(*_args: object) -> brief_service._ProviderBrief:
+        return brief_service._ProviderBrief(
+            headline="Invented claim",
+            summary="This wording must not be accepted.",
+            focus_alert_id=focus_alert_id,
+            highlighted_signal=highlighted_signal,
+        )
+
+    monkeypatch.setattr(brief_service, "_google", fake_google)
+
+    with pytest.raises(AppError) as error:
+        brief_service.generate_operations_brief(_radar(), Settings(llm_primary_model="test"))
+
+    assert error.value.code == "AI_BRIEF_UNAVAILABLE"
+    assert error.value.http_status == 503
