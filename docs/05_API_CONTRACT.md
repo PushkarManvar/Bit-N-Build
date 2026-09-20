@@ -636,6 +636,68 @@ Return `null` for metrics that have not been computed. Do not return invented de
 }
 ```
 
+### `GET /api/analytics/friction-radar` (additive)
+
+Ranks only persisted, open `unresolved_refund` alerts that have both a resolved
+profile and an order reference. It is an operational prioritization score, not
+a churn prediction, payment-status claim, or automated resolution decision.
+`limit` defaults to `5` and must be between `1` and `50`.
+
+```json
+{
+  "as_of": "2026-09-20T12:00:00Z",
+  "score_version": "friction_v1",
+  "score_max": 60,
+  "summary": {
+    "attributable_open_refunds": 3,
+    "unattributed_open_refunds": 1,
+    "critical": 1,
+    "elevated": 1,
+    "watch": 1
+  },
+  "journeys": [
+    {
+      "alert_id": "d5c032c6-7c20-4f86-99c9-d46f187024e0",
+      "profile_id": "9f4e47b9-c0bf-4723-90a1-437957a2b4a6",
+      "display_name": "Riya Shah",
+      "order_id": "ORD-204",
+      "friction_score": 57,
+      "band": "critical",
+      "unresolved_age_days": 5,
+      "distinct_channel_count": 3,
+      "support_contact_count": 3,
+      "has_open_repeat_contact_alert": true,
+      "pending_candidate_review_count": 1,
+      "components": {
+        "unresolved_age_points": 20,
+        "channel_points": 9,
+        "support_contact_points": 12,
+        "repeat_contact_points": 10,
+        "pending_candidate_review_points": 6
+      }
+    }
+  ],
+  "unresolved_age_distribution": [
+    { "bucket": "0 days", "count": 0 },
+    { "bucket": "1–3 days", "count": 1 },
+    { "bucket": "4–7 days", "count": 1 },
+    { "bucket": "8+ days", "count": 1 }
+  ],
+  "support_contact_channels": [
+    { "channel": "call_center", "count": 3, "share_percent": 50.0 }
+  ]
+}
+```
+
+The score is capped at `60`: `min(30, 4 × whole unresolved days)` +
+`min(12, 3 × distinct support channels)` + `min(12, 4 × support contacts)` +
+`10` for an open repeat-contact alert + `min(6, 6 × pending candidate reviews)`.
+Unresolved age starts at the earliest persisted `return_requested` event for
+the same profile and order. Candidate reviews are not treated as linked events.
+`unattributed_open_refunds` is reported separately because it cannot be ranked
+without a profile and order. All values are computed from persisted records at
+the response timestamp.
+
 ## 10. Data Pipeline (additive)
 
 ### `GET /api/pipeline/overview`

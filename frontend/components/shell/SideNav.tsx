@@ -10,6 +10,7 @@ import {
   PlayCircle,
   Layers,
   Compass,
+  Radar,
 } from "lucide-react";
 import { getReviews } from "@/lib/api";
 
@@ -70,6 +71,11 @@ export function SideNav({ onCloseMobileNav }: SideNavProps) {
       label: "Data Pipeline",
       href: "/pipeline",
       icon: Layers,
+    },
+    {
+      label: "Journey Intelligence",
+      href: "/journey-intelligence",
+      icon: Radar,
     },
   ];
 

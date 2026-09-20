@@ -15,6 +15,7 @@ import type {
   DemoStartRequest,
   DemoStartResponse,
   HealthResult,
+  FrictionRadarResponse,
   MatchExplanationResponse,
   PipelineEventDetailResponse,
   PipelineEventListResponse,
@@ -203,6 +204,25 @@ export async function getAnalyticsChannels(signal?: AbortSignal): Promise<Channe
   });
 
   return handleResponse<ChannelsResponse>(response);
+}
+
+export async function getFrictionRadar(params?: {
+  limit?: number;
+  signal?: AbortSignal;
+}): Promise<FrictionRadarResponse> {
+  const baseUrl = getBaseUrl();
+  const searchParams = new URLSearchParams();
+  if (params?.limit) searchParams.set("limit", String(params.limit));
+  const query = searchParams.toString();
+  const response = await fetch(
+    `${baseUrl}/api/analytics/friction-radar${query ? `?${query}` : ""}`,
+    {
+      cache: "no-store",
+      signal: params?.signal ?? AbortSignal.timeout(5_000),
+    }
+  );
+
+  return handleResponse<FrictionRadarResponse>(response);
 }
 
 export async function getReviews(signal?: AbortSignal): Promise<ReviewListResponse> {
