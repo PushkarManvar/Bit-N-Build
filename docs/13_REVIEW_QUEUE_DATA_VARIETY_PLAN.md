@@ -1,6 +1,6 @@
 # Review Queue Data Variety and Backend Read-Model Plan
 
-**Status:** Planned — do not implement from this document without the staged checks below  
+**Status:** Phase 0 complete — fixture/resolver changes remain staged below
 **Created:** 2026-09-20  
 **Audience:** Backend, data, frontend, QA, and demo owners  
 **Related:** `docs/04_DATA_IDENTITY_AND_RULES.md`, `docs/05_API_CONTRACT.md`, `docs/07_TESTING_EVALUATION_AND_DEMO.md`, and `docs/12_STITCH_FRONTEND_IMPLEMENTATION_GUIDE.md`
@@ -73,6 +73,15 @@ This resolves a current documentation/code mismatch: the present resolver create
 4. Identify whether the excess cases come from a dirty database, a seed-generation defect, or a resolver-policy defect.
 
 **Exit criterion:** the team can explain every pending case category and reproduce the count from an empty local database.
+
+**2026-09-20 baseline result:** a hermetic clean reset produces 63 pending
+reviews: 35 mobile-app rows with device evidence, 21 web rows with
+device-plus-session evidence, 6 web rows with device evidence, and one
+call-centre email/order strong conflict. The 62 incomplete-evidence rows all
+score 50, have no persisted conflict, and share the deterministic
+review-threshold reason. The six-step Riya demo adds one further device-only
+review to the live workspace. The excess is therefore a seed-composition
+problem, not dirty database history or a frontend projection issue.
 
 ### Phase 1 — Deterministic review-case fixtures
 
@@ -203,7 +212,7 @@ If added, populate them when the decision is created, backfill deterministically
 
 | Order | Task | Owner | Validation |
 |---:|---|---|---|
-| 1 | Add pending-review composition diagnostic and clean-seed integration test. | Backend/data | `pytest` proves reproducible mix. |
+| 1 | Add pending-review composition diagnostic and clean-seed integration test. | Backend/data | Done 2026-09-20: aggregate-only diagnostic and hermetic reset test prove the 63-row mix exactly. |
 | 2 | Decide the canonical 3–7 review-case fixture mix and add it to the deterministic generator. | Data + backend reviewer | Generator remains deterministic; hidden truth stays isolated. |
 | 3 | Enforce the strong-conflict resolution policy (`approve_link` returns 409) and test it. | Backend | Conflict cannot link; reject/create-profile audit paths remain valid. |
 | 4 | Write the additive `GET /api/review-queue` cursor/filter/read-model contract and example; keep `GET /api/reviews` compatible. | Backend + frontend reviewer | Pydantic/API tests; frontend type update. |
