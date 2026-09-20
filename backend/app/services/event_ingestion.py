@@ -27,7 +27,7 @@ from app.schemas.events import (
     EventRetrievalResponse,
     RawEventDetail,
 )
-from app.services.candidate_retriever import retrieve_candidates
+from app.services.candidate_retriever import has_same_name_collision, retrieve_candidates
 from app.services.identity_resolver import DecisionResult, decide
 from app.services.journey_analyzer import analyze_profile
 from app.services.normalizer import NormalizedEvent, normalize_for_channel
@@ -153,7 +153,14 @@ def _resolve_identity(
     normalized: NormalizedEvent,
 ) -> tuple[DecisionResult, str | None]:
     retrieval = retrieve_candidates(db, normalized)
-    decision = decide(normalized, retrieval.candidates, retrieval.field_profile_map)
+    decision = decide(
+        normalized,
+        retrieval.candidates,
+        retrieval.field_profile_map,
+        same_name_collision=(
+            not retrieval.candidates and has_same_name_collision(db, normalized)
+        ),
+    )
     if decision.outcome == IdentityOutcome.NEW_PROFILE:
         profile = apply_new_profile(db, canonical, normalized, decision)
         return decision, str(profile.id)

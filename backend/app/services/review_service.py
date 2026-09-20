@@ -135,6 +135,24 @@ def resolve_review(
 
     profile: CustomerProfile | None = None
     if action == ReviewDecision.APPROVE_LINK:
+        if decision.conflicts:
+            raise ReviewError(
+                code="REVIEW_APPROVAL_BLOCKED",
+                message=(
+                    "A decision with conflicting strong identifiers cannot be approved. "
+                    "Reject the link or create a separate profile instead."
+                ),
+                http_status=409,
+            )
+        if not decision.candidates:
+            raise ReviewError(
+                code="REVIEW_APPROVAL_BLOCKED",
+                message=(
+                    "A decision without an identifier candidate cannot be approved. "
+                    "Reject the link or create a separate profile instead."
+                ),
+                http_status=409,
+            )
         if not selected_profile_id:
             raise ReviewError(
                 code="VALIDATION_ERROR",
