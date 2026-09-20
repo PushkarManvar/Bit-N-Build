@@ -55,9 +55,9 @@ The queue separates strong conflicts, incomplete evidence, and same-name safety 
 
 ### Deterministic journey prioritization
 
-The Friction Radar decomposes each score into persisted facts such as unresolved age, support-channel spread, contact count, and repeat contact. Optional AI wording can summarize those verified facts, but it cannot alter a score, identity decision, or alert.
+The Friction Radar presents every priority case on the same light operations surface used across JourneyLens. Colored signal bars separate unresolved age, support-channel spread, contact count, repeat contact, and candidate review, while persisted facts determine every point. Optional AI wording can summarize verified facts; it cannot alter a score, identity decision, or alert.
 
-![Journey Friction Radar showing Riya Shah's deterministic score decomposition](docs/screenshots/journey-intelligence.png)
+![Journey Friction Radar with a light priority dossier and Riya Shah score decomposition](docs/screenshots/journey-intelligence.png)
 
 ## Core capabilities
 
