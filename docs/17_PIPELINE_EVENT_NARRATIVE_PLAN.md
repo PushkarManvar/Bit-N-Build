@@ -174,7 +174,7 @@ The inspector header and tabs remain raw-ID-safe. Add the same `event_summary` n
 
 ## 7. Data and normalization work
 
-The generator already includes structured examples that can make narratives specific without adding fictional fields:
+The deterministic demo scenario includes structured support context that can make narratives specific without adding fictional fields:
 
 - Riya's `support_contacted` events have `Refund not received` and `Second follow-up` source notes;
 - `store_visited` events carry `store_city` and may carry an order reference;
@@ -220,7 +220,7 @@ Required automated proofs:
 | 4 | Add additive pipeline schema fields and use the mapper from the one read-model seam. | `schemas/pipeline.py`, `services/pipeline_read_model.py`, route tests | Done: overview, filtered list, updates, and inspector agree on one summary and order-reference presence. |
 | 5 | Update the pipeline table and inspector hierarchy. | `frontend/components/pipeline/` | Done: occurred/received/processed clocks are explicit, the safe narrative is shown in the table and inspector, and the default UUID column is removed. |
 | 6 | Adjust deterministic reset ingestion order only if Task 1 proves it is needed. | `services/demo.py`, reset tests | Representative newest page; no outcome/count regression. |
-| 7 | Add browser and accessibility coverage; rerun the Riya demo. | frontend tests/demo runbook | Specific pipeline rows appear during the six-step story without raw-data leakage. |
+| 7 | Add browser and accessibility coverage; rerun the Riya demo. | frontend tests/demo runbook | Done 2026-09-20: clean-reset Riya demo showed distinct return, refund-not-received, and return-status rows; the sixth row arrived through polling, and the inspector reused the same safe summary. |
 
 ## 10. Scope boundary
 
