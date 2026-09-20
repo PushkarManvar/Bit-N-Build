@@ -170,6 +170,60 @@ export interface ChannelsResponse {
   physical_store: number;
 }
 
+export type FrictionBand = "critical" | "elevated" | "watch" | "none";
+
+export interface FrictionScoreComponents {
+  unresolved_age_points: number;
+  channel_points: number;
+  support_contact_points: number;
+  repeat_contact_points: number;
+  pending_candidate_review_points: number;
+}
+
+export interface FrictionJourney {
+  alert_id: string;
+  profile_id: string;
+  display_name: string | null;
+  order_id: string;
+  friction_score: number;
+  band: FrictionBand;
+  unresolved_age_days: number;
+  distinct_channel_count: number;
+  support_contact_count: number;
+  has_open_repeat_contact_alert: boolean;
+  pending_candidate_review_count: number;
+  components: FrictionScoreComponents;
+}
+
+export interface FrictionRadarSummary {
+  attributable_open_refunds: number;
+  unattributed_open_refunds: number;
+  critical: number;
+  elevated: number;
+  watch: number;
+}
+
+export interface FrictionAgeDistributionBucket {
+  bucket: string;
+  count: number;
+}
+
+export interface FrictionSupportContactChannel {
+  channel: Channel;
+  count: number;
+  share_percent: number | null;
+}
+
+export interface FrictionRadarResponse {
+  as_of: string;
+  score_version: "friction_v1";
+  score_max: number;
+  summary: FrictionRadarSummary;
+  journeys: FrictionJourney[];
+  unresolved_age_distribution: FrictionAgeDistributionBucket[];
+  support_contact_channels: FrictionSupportContactChannel[];
+}
+
 // Review Types
 export interface ReviewEventOut {
   channel: Channel | null;
