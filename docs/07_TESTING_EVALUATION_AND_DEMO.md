@@ -260,7 +260,7 @@ Open the journey and alert.
 
 ### 1:25–1:45 — Safe non-merge
 
-> This record is also named Aarav Patel, but it shares no email, phone, order, customer ID, or device. JourneyLens refuses to merge on name alone and sends it for review.
+> This record is also named Aarav Patel. JourneyLens keeps it as a separate profile because there is no identifier evidence to support a link, and it refuses to merge on name similarity alone.
 
 Choose `Create new profile` or `Keep separate`.
 

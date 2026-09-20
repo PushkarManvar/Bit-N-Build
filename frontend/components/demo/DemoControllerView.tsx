@@ -82,11 +82,11 @@ const SCENARIO_STEPS: StepDefinition[] = [
   {
     id: 6,
     channel: "mobile_app",
-    title: "Aarav signs in with conflicting identifiers",
+    title: "Aarav signs in on the mobile app",
     description:
-      "A distinct mobile identity reaches the system after the Riya journey is complete.",
+      "A separate Aarav record arrives with a new email and device after the Riya journey is complete.",
     expectedOutcome:
-      "Routes the ambiguity to the Review Queue for a human decision.",
+      "Aarav is kept as a separate profile; name similarity alone never merges.",
   },
 ];
 
