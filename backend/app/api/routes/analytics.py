@@ -5,8 +5,15 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.db.session import get_db
-from app.schemas.analytics import AnalyticsOverview, ChannelsResponse, FrictionRadarResponse
+from app.schemas.analytics import (
+    AiOperationsBrief,
+    AnalyticsOverview,
+    ChannelsResponse,
+    FrictionRadarResponse,
+)
+from app.services.ai_operations_brief import generate_operations_brief
 from app.services.analytics import compute_channels, compute_overview
 from app.services.friction_radar_read_model import compute_friction_radar
 
@@ -34,3 +41,9 @@ def friction_radar(
 ) -> FrictionRadarResponse:
     """Rank open, attributable unresolved-refund journeys by persisted friction."""
     return compute_friction_radar(db, limit=limit)
+
+
+@router.post("/analytics/friction-radar/brief", response_model=AiOperationsBrief)
+def friction_radar_brief(db: DbSession) -> AiOperationsBrief:
+    """Generate optional AI wording from the current deterministic radar facts."""
+    return generate_operations_brief(compute_friction_radar(db, limit=5), settings)

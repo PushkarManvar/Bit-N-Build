@@ -698,6 +698,34 @@ the same profile and order. Candidate reviews are not treated as linked events.
 without a profile and order. All values are computed from persisted records at
 the response timestamp.
 
+### `POST /api/analytics/friction-radar/brief` (additive)
+
+Generates optional plain-language wording for the current top five deterministic
+Friction Radar journeys. It never scores a journey, determines an identity,
+changes an alert, or accesses raw payloads or identifier values. The response
+is unavailable with `409 AI_BRIEF_NO_DATA` when there is no ranked journey, and
+with `503 AI_BRIEF_UNAVAILABLE` when a configured provider cannot safely supply
+a fact-valid brief. The deterministic radar remains usable in either case.
+
+```json
+{
+  "headline": "Prioritize the oldest unresolved refund journey",
+  "summary": "The selected case combines unresolved age with repeated support contact.",
+  "focus_alert_id": "d5c032c6-7c20-4f86-99c9-d46f187024e0",
+  "highlighted_signal": "unresolved_age",
+  "provider": "google",
+  "model": "configured-model-name",
+  "generated_at": "2026-09-20T12:00:00Z",
+  "cached": false
+}
+```
+
+`focus_alert_id` must name a journey in the deterministic source snapshot.
+`highlighted_signal` is restricted to a signal actually present on that same
+journey: `unresolved_age`, `support_channels`, `support_contacts`,
+`repeat_contact`, or `candidate_review`. Equivalent source snapshots reuse
+in-process wording for five minutes to avoid unnecessary provider calls.
+
 ## 10. Data Pipeline (additive)
 
 ### `GET /api/pipeline/overview`

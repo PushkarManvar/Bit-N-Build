@@ -78,3 +78,14 @@ class FrictionRadarResponse(BaseModel):
     journeys: list[FrictionJourney]
     unresolved_age_distribution: list[FrictionAgeDistributionBucket]
     support_contact_channels: list[FrictionSupportContactChannel]
+
+
+class AiOperationsBrief(BaseModel):
+    headline: str
+    summary: str
+    focus_alert_id: str
+    highlighted_signal: str
+    provider: str
+    model: str
+    generated_at: datetime
+    cached: bool = False
