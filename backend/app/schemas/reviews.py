@@ -78,6 +78,8 @@ class ReviewQueueSummary(BaseModel):
     pending: int
     critical_conflicts: int
     incomplete_evidence: int
+    same_name_collisions: int
+    ambiguous_moderate_matches: int
 
 
 class ReviewQueueListResponse(BaseModel):

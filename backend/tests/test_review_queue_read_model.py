@@ -19,6 +19,8 @@ def test_review_queue_classifies_the_curated_cases_without_identifier_values(cli
         "pending": 3,
         "critical_conflicts": 1,
         "incomplete_evidence": 1,
+        "same_name_collisions": 1,
+        "ambiguous_moderate_matches": 0,
     }
     assert [item["review_kind"] for item in body["items"]] == [
         "strong_identifier_conflict",
@@ -99,6 +101,8 @@ def test_review_queue_filters_paginate_and_reject_a_mismatched_cursor(client) ->
         "pending": 1,
         "critical_conflicts": 0,
         "incomplete_evidence": 0,
+        "same_name_collisions": 1,
+        "ambiguous_moderate_matches": 0,
     }
     assert filtered.json()["items"][0]["event"]["channel"] == "physical_store"
 

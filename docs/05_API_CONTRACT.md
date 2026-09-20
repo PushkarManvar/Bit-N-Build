@@ -561,7 +561,9 @@ returns the shared `VALIDATION_ERROR` envelope with HTTP 422.
   "summary": {
     "pending": 3,
     "critical_conflicts": 1,
-    "incomplete_evidence": 1
+    "incomplete_evidence": 1,
+    "same_name_collisions": 1,
+    "ambiguous_moderate_matches": 0
   }
 }
 ```

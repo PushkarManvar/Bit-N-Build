@@ -236,6 +236,8 @@ export interface ReviewQueueSummary {
   pending: number;
   critical_conflicts: number;
   incomplete_evidence: number;
+  same_name_collisions: number;
+  ambiguous_moderate_matches: number;
 }
 
 export interface ReviewQueueListResponse {

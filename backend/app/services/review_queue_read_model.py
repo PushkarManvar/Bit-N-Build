@@ -319,6 +319,14 @@ def list_review_queue(
             item.review_kind == ReviewQueueKind.INCOMPLETE_EVIDENCE
             for item in matching_items
         ),
+        same_name_collisions=sum(
+            item.review_kind == ReviewQueueKind.SAME_NAME_COLLISION
+            for item in matching_items
+        ),
+        ambiguous_moderate_matches=sum(
+            item.review_kind == ReviewQueueKind.AMBIGUOUS_MODERATE_MATCH
+            for item in matching_items
+        ),
     )
     page_cursor = _decode_cursor(cursor, filters) if cursor else None
     if page_cursor is not None:

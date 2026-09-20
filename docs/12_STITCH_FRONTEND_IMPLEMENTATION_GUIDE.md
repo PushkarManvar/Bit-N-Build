@@ -396,30 +396,31 @@ Export CSV, batch actions, and **Send to Review Queue** are not supported by the
 ### 8.4 Review Queue
 
 **Route:** `/reviews`  
-**API:** `GET /api/reviews`
+**API:** `GET /api/review-queue` (the older `GET /api/reviews` remains a compatibility contract)
 
 #### Required layout
 
 1. Queue heading and real pending count.
 2. Compact queue summary; show only metrics that can be computed from the current response.
-3. Search/filter bar.
-4. Candidate-pair table/cards.
-5. Review action linking to `/reviews/{match_decision_id}`.
+3. Server-backed filter bar for channel, review type, and priority.
+4. Review-decision table/cards, including cases with no suggested candidate.
+5. In-place review action drawer using `POST /api/reviews/{match_decision_id}/resolve`.
 
 #### Data behavior
 
-- Render `event`, `best_candidate`, `evidence`, `conflicts`, `missing_strong_identifiers`, and `reason` directly from each review item.
-- The score is an identity score. A conflict badge must remain prominent even when the score is high.
-- The current response has no queue-created timestamp, priority, SLA, resolved-today count, average-review duration, incoming record ID, or pagination. Omit those claims until the backend supplies them.
-- Search and channel filters may operate client-side over the returned pending items.
-- Sort conflicts first, then original API order. Label that behavior; do not call it SLA ordering.
+- Render `review_kind`, `priority`, `event`, `candidates`, safe structured `evidence`, safe structured `conflicts`, `missing_strong_identifiers`, and `reason` directly from each queue item.
+- The API owns classification, priority, summary, ordering, and cursor pagination. Do not reconstruct them in the client.
+- `summary` exposes pending, critical conflicts, incomplete-evidence, same-name-collision, and ambiguous-moderate-match counts. Do not invent SLA, resolved-today, or average-review-duration metrics.
+- A same-name safety case has no candidate by design; display the safe `create_profile`/`reject_link` paths, never an inferred candidate.
+- The API never returns unmasked identifier values in this read model.
 
 #### Acceptance criteria
 
 - A strong conflict cannot appear as a safe match.
 - Empty, loading, network-error, and default states work.
 - Pending count stays synchronized with the shell badge.
-- Every row has a keyboard-reachable **Review match** action.
+- Filters and **Load next** use the API's opaque cursor; a successful resolution reloads the first page instead of preserving an old cursor.
+- Every row has a keyboard-reachable **Review case** action.
 
 ### 8.5 Review Detail
 
