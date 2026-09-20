@@ -24,6 +24,7 @@ Read these documents in order when joining the project:
 | 18 | `16_DATA_PIPELINE_READ_MODEL_PLAN.md` | Ordered backend/data/frontend work for a truthful pipeline snapshot, event stream, inspector, and polling |
 | 19 | `17_PIPELINE_EVENT_NARRATIVE_PLAN.md` | Planned safe, specific event narratives and clock clarity for the Data Pipeline |
 | 20 | `18_JOURNEY_FRICTION_RADAR_PLAN.md` | Planned deterministic ranking and truthful visualisation of open unresolved-refund journeys |
+| 21 | `19_AI_OPERATIONS_BRIEF_PLAN.md` | Optional facts-only LLM brief and richer Journey Intelligence dossier |
 
 Repository-level instructions:
 

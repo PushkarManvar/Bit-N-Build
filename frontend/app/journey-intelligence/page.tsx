@@ -1,5 +1,5 @@
-import { FrictionRadarView } from "@/components/journey-intelligence/FrictionRadarView";
+import { OperationsDossierView } from "@/components/journey-intelligence/OperationsDossierView";
 
 export default function JourneyIntelligencePage() {
-  return <FrictionRadarView />;
+  return <OperationsDossierView />;
 }

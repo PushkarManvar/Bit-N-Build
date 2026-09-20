@@ -28,6 +28,12 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://journeylens:journeylens_dev_only@db:5432/journeylens}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      LLM_PRIMARY_BASE_URL: ${LLM_PRIMARY_BASE_URL:-}
+      LLM_PRIMARY_API_KEY: ${LLM_PRIMARY_API_KEY:-}
+      LLM_PRIMARY_MODEL: ${LLM_PRIMARY_MODEL:-}
+      LLM_BACKUP_BASE_URL: ${LLM_BACKUP_BASE_URL:-}
+      LLM_BACKUP_API_KEY: ${LLM_BACKUP_API_KEY:-}
+      LLM_BACKUP_MODEL: ${LLM_BACKUP_MODEL:-}
     ports:
       - "8000:8000"
     volumes:

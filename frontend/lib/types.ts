@@ -224,6 +224,17 @@ export interface FrictionRadarResponse {
   support_contact_channels: FrictionSupportContactChannel[];
 }
 
+export interface AiOperationsBrief {
+  headline: string;
+  summary: string;
+  focus_alert_id: string;
+  highlighted_signal: string;
+  provider: string;
+  model: string;
+  generated_at: string;
+  cached: boolean;
+}
+
 // Review Types
 export interface ReviewEventOut {
   channel: Channel | null;

@@ -289,3 +289,10 @@ def test_friction_radar_validates_its_limit(client, db_session) -> None:
 
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+def test_friction_radar_brief_rejects_an_empty_deterministic_snapshot(client, db_session) -> None:
+    response = client.post("/api/analytics/friction-radar/brief")
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "AI_BRIEF_NO_DATA"

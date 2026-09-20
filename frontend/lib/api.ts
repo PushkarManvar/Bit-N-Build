@@ -7,6 +7,7 @@ import type {
   AlertListResponse,
   AnalyticsOverview,
   ApiErrorDetail,
+  AiOperationsBrief,
   Channel,
   ChannelsResponse,
   DashboardUpdatesResponse,
@@ -223,6 +224,18 @@ export async function getFrictionRadar(params?: {
   );
 
   return handleResponse<FrictionRadarResponse>(response);
+}
+
+export async function generateFrictionRadarBrief(
+  signal?: AbortSignal
+): Promise<AiOperationsBrief> {
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/api/analytics/friction-radar/brief`, {
+    method: "POST",
+    cache: "no-store",
+    signal: signal ?? AbortSignal.timeout(15_000),
+  });
+  return handleResponse<AiOperationsBrief>(response);
 }
 
 export async function getReviews(signal?: AbortSignal): Promise<ReviewListResponse> {
