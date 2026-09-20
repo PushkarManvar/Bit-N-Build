@@ -71,7 +71,7 @@
     {
       "source_event_id": "DEMO-APP-02",
       "channel": "mobile_app",
-      "event_type": "product_viewed",
+      "event_type": "app_login",
       "occurred_at": "2026-09-18T11:00:00Z",
       "schema_version": "1.0",
       "identifiers": [
