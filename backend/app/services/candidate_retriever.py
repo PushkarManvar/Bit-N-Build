@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import ProfileIdentifier
+from app.db.models import CanonicalEvent, ProfileIdentifier
 from app.services.normalizer import NormalizedEvent
 
 STRONG_IDENTIFIER_TYPES: frozenset[str] = frozenset({"email", "phone", "customer_id", "order_id"})
@@ -73,3 +73,39 @@ def retrieve_candidates(db: Session, event: NormalizedEvent) -> RetrievalResult:
         for pid, matched in profile_fields.items()
     ]
     return RetrievalResult(candidates=candidates, field_profile_map=field_profiles)
+
+
+def has_same_name_collision(db: Session, event: NormalizedEvent) -> bool:
+    """Detect a name collision only as a safe review-routing condition.
+
+    Names never enter identifier retrieval, candidate scoring, or automatic
+    linking. This boolean merely prevents a name-only event from silently
+    creating a third profile when an existing normalized display name is
+    already present.
+    """
+    incoming_name = _normalized_text(event.attributes.get("customer_name"))
+    incoming_city = _normalized_text(event.attributes.get("city"))
+    if incoming_name is None or incoming_city is None:
+        return False
+
+    profile_rows = db.execute(
+        select(CanonicalEvent.profile_id, CanonicalEvent.attributes).where(
+            CanonicalEvent.profile_id.is_not(None)
+        )
+    ).all()
+    matching_profile_ids = {
+        profile_id
+        for profile_id, attributes in profile_rows
+        if isinstance(attributes, dict)
+        and _normalized_text(attributes.get("customer_name")) == incoming_name
+        and _normalized_text(attributes.get("city")) == incoming_city
+    }
+    return len(matching_profile_ids) >= 2
+
+
+def _normalized_text(value: object) -> str | None:
+    """Normalize display-only text for collision routing, never matching."""
+    if not isinstance(value, str):
+        return None
+    normalized = " ".join(value.split()).casefold()
+    return normalized or None

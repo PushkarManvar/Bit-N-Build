@@ -4,7 +4,13 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.core.enums import Channel, EventType, ReviewDecision
+from app.core.enums import (
+    Channel,
+    EventType,
+    ReviewDecision,
+    ReviewQueueKind,
+    ReviewQueuePriority,
+)
 
 
 class ReviewEventOut(BaseModel):
@@ -33,6 +39,54 @@ class ReviewItem(BaseModel):
 class ReviewListResponse(BaseModel):
     items: list[ReviewItem]
     total: int
+
+
+class ReviewQueueCandidateOut(BaseModel):
+    profile_id: str
+    display_name: str | None = None
+    score: int
+    matched_fields: list[str]
+
+
+class ReviewQueueEvidenceOut(BaseModel):
+    field: str
+    result: str
+    weight: int
+    message: str
+
+
+class ReviewQueueConflictOut(BaseModel):
+    fields: list[str]
+    message: str
+
+
+class ReviewQueueItem(BaseModel):
+    match_decision_id: str
+    created_at: datetime
+    review_kind: ReviewQueueKind
+    priority: ReviewQueuePriority
+    event: ReviewEventOut
+    candidates: list[ReviewQueueCandidateOut]
+    evidence: list[ReviewQueueEvidenceOut]
+    conflicts: list[ReviewQueueConflictOut]
+    missing_strong_identifiers: list[str]
+    reason_code: str
+    reason: str
+
+
+class ReviewQueueSummary(BaseModel):
+    pending: int
+    critical_conflicts: int
+    incomplete_evidence: int
+    same_name_collisions: int
+    ambiguous_moderate_matches: int
+
+
+class ReviewQueueListResponse(BaseModel):
+    items: list[ReviewQueueItem]
+    total: int
+    next_cursor: str | None = None
+    summary: ReviewQueueSummary
 
 
 class ResolveReviewRequest(BaseModel):

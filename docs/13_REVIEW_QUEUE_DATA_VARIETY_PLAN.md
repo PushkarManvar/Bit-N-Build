@@ -1,6 +1,6 @@
 # Review Queue Data Variety and Backend Read-Model Plan
 
-**Status:** Planned — do not implement from this document without the staged checks below  
+**Status:** Phases 0–2 complete — richer queue read model is available for frontend wiring
 **Created:** 2026-09-20  
 **Audience:** Backend, data, frontend, QA, and demo owners  
 **Related:** `docs/04_DATA_IDENTITY_AND_RULES.md`, `docs/05_API_CONTRACT.md`, `docs/07_TESTING_EVALUATION_AND_DEMO.md`, and `docs/12_STITCH_FRONTEND_IMPLEMENTATION_GUIDE.md`
@@ -54,6 +54,12 @@ The first useful demo and local-development queue should contain **3–7 pending
 
 The curated queue must include at least one strong conflict and one incomplete-evidence case. It may include one same-name collision story. Case labels must be derived from the resolver result; the generator must not write a label that runtime code blindly trusts.
 
+**2026-09-20 product decision:** the curated demo queue contains exactly three
+pending cases: one strong conflict, one incomplete-evidence bridge, and one
+same-name collision. Moderate-identifier ties and the identifier-uniqueness
+migration are deferred; the current strong-identifier ownership invariant is
+unchanged.
+
 This resolves a current documentation/code mismatch: the present resolver creates a profile when no identifier candidate exists, while the Aarav demo narration expects a safe human-review story. The intended policy is to route only an explicitly detected **same-name collision** to review, with no suggested candidate and no approval action. Name equality remains a routing safeguard, never matching evidence and never a link recommendation.
 
 ## 5. Staged implementation plan
@@ -73,6 +79,14 @@ This resolves a current documentation/code mismatch: the present resolver create
 4. Identify whether the excess cases come from a dirty database, a seed-generation defect, or a resolver-policy defect.
 
 **Exit criterion:** the team can explain every pending case category and reproduce the count from an empty local database.
+
+**2026-09-20 baseline result:** the `full` seed now produces 67 pending
+reviews: 62 repetitive incomplete-evidence cases, 4 same-name-and-city safety
+cases, and one call-centre strong conflict. It remains available for dataset
+and evaluation work. The demo reset defaults to the separate `curated` seed:
+exactly one strong conflict, one incomplete-evidence bridge, and one Aarav
+same-name safety case. The excess was a seed-composition problem, not dirty
+database history or a frontend projection issue.
 
 ### Phase 1 — Deterministic review-case fixtures
 
@@ -203,11 +217,11 @@ If added, populate them when the decision is created, backfill deterministically
 
 | Order | Task | Owner | Validation |
 |---:|---|---|---|
-| 1 | Add pending-review composition diagnostic and clean-seed integration test. | Backend/data | `pytest` proves reproducible mix. |
-| 2 | Decide the canonical 3–7 review-case fixture mix and add it to the deterministic generator. | Data + backend reviewer | Generator remains deterministic; hidden truth stays isolated. |
-| 3 | Enforce the strong-conflict resolution policy (`approve_link` returns 409) and test it. | Backend | Conflict cannot link; reject/create-profile audit paths remain valid. |
-| 4 | Write the additive `GET /api/review-queue` cursor/filter/read-model contract and example; keep `GET /api/reviews` compatible. | Backend + frontend reviewer | Pydantic/API tests; frontend type update. |
-| 5 | Add structured candidate/evidence/conflict fields to the endpoint. | Backend | Contract test includes conflict and incomplete-evidence cases. |
+| 1 | Add pending-review composition diagnostic and clean-seed integration test. | Backend/data | Done 2026-09-20: aggregate-only diagnostic and hermetic reset test prove the 63-row mix exactly. |
+| 2 | Decide the canonical 3–7 review-case fixture mix and add it to the deterministic generator. | Data + backend reviewer | Done 2026-09-20: the deterministic curated reset seed contains exactly conflict, bridge, and same-name safety cases; no truth labels are available at runtime. |
+| 3 | Enforce the strong-conflict resolution policy (`approve_link` returns 409) and test it. | Backend | Done 2026-09-20: conflict and no-candidate same-name decisions reject approval with shared HTTP 409; reject/create-profile paths remain available. |
+| 4 | Write the additive `GET /api/review-queue` cursor/filter/read-model contract and example; keep `GET /api/reviews` compatible. | Backend + frontend reviewer | Done 2026-09-20: Pydantic/API contract, filter-bound opaque cursor, frontend types, and compatibility coverage. |
+| 5 | Add structured candidate/evidence/conflict fields to the endpoint. | Backend | Done 2026-09-20: field names, weights, candidate metadata, and conflict messages are safe projections with no unmasked identifier values. |
 | 6 | Add the partial-uniqueness migration for moderate IDs, only after Task 1 proves it is needed. | Backend | Clean migration, strong-identifier duplicate tests, tie test. |
 | 7 | Replace frontend local derivations with the new API fields and render a dense table/detail view. | Frontend | Typecheck, lint, desktop/tablet/mobile screenshots. |
 

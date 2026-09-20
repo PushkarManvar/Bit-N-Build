@@ -465,6 +465,9 @@ Open journey alerts across all profiles (Command Centre feed). **Additive endpoi
 
 ### `GET /api/reviews?status=pending`
 
+This compatibility response remains frozen for current clients. New queue
+surfaces use the additive endpoint below.
+
 ```json
 {
   "items": [
@@ -488,6 +491,80 @@ Open journey alerts across all profiles (Command Centre feed). **Additive endpoi
     }
   ],
   "total": 1
+}
+```
+
+### `GET /api/review-queue`
+
+Returns a server-classified page of pending review decisions for operations
+work. It never returns raw payloads or unmasked identifier values. `review_kind`
+and `priority` are derived only from persisted evidence, conflicts, candidates,
+and the explicit same-name safety routing reason.
+
+Supported query parameters:
+
+- `limit`: 1–100, default 20;
+- `cursor`: opaque keyset cursor bound to the active filters;
+- `status`: only `pending` is supported initially;
+- `channel`: `web|mobile_app|call_center|physical_store`;
+- `kind`: `strong_identifier_conflict|ambiguous_moderate_match|same_name_collision|incomplete_evidence`; and
+- `priority`: `critical|high|standard`.
+
+The default order is critical, high, then standard priority; within a priority,
+oldest decision first, then decision ID. `summary` and `total` apply the same
+filters before cursor pagination. Reusing a cursor with different filters
+returns the shared `VALIDATION_ERROR` envelope with HTTP 422.
+
+```json
+{
+  "items": [
+    {
+      "match_decision_id": "uuid",
+      "created_at": "2026-09-20T08:00:00Z",
+      "review_kind": "strong_identifier_conflict",
+      "priority": "critical",
+      "event": {
+        "channel": "call_center",
+        "event_type": "support_contacted",
+        "customer_name": "Conflict Case",
+        "occurred_at": "2026-09-20T08:00:00Z"
+      },
+      "candidates": [
+        {
+          "profile_id": "uuid",
+          "display_name": "Conflict Alpha",
+          "score": 90,
+          "matched_fields": ["email"]
+        }
+      ],
+      "evidence": [
+        {
+          "field": "email",
+          "result": "exact_match",
+          "weight": 90,
+          "message": "Same email matches the profile."
+        }
+      ],
+      "conflicts": [
+        {
+          "fields": ["email", "phone"],
+          "message": "Email and phone resolve to different profiles."
+        }
+      ],
+      "missing_strong_identifiers": ["customer_id", "order_id"],
+      "reason_code": "strong_identifier_conflict",
+      "reason": "Strong identifiers point to different profiles; a human must decide."
+    }
+  ],
+  "next_cursor": "opaque-or-null",
+  "total": 3,
+  "summary": {
+    "pending": 3,
+    "critical_conflicts": 1,
+    "incomplete_evidence": 1,
+    "same_name_collisions": 1,
+    "ambiguous_moderate_matches": 0
+  }
 }
 ```
 
@@ -702,18 +779,22 @@ The backend contract tests cover these snapshots:
 
 ## 11. Demo controls
 
-### `POST /api/demo/reset`
+### `POST /api/demo/reset?seed=curated|full`
 
-Resets demo-specific records and reloads base fixtures. It must not be exposed as a production operation.
+Resets demo-specific records and reloads deterministic synthetic fixtures. It
+must not be exposed as a production operation. `seed=curated` is the default
+and loads the three-case review queue (strong conflict, incomplete-evidence
+bridge, and same-name safety). `seed=full` retains the larger data-generation
+fixture set for evaluation work.
 
 ```json
 {
   "status": "reset",
   "loaded": {
-    "received": 189,
-    "duplicates": 6,
-    "failed": 2,
-    "invalid": 2
+    "received": 8,
+    "duplicates": 0,
+    "failed": 0,
+    "invalid": 0
   }
 }
 ```

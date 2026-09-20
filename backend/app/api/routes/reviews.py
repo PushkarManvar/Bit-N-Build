@@ -1,12 +1,13 @@
 """Review queue and resolution endpoints (Gate G5)."""
 
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.enums import Channel, ReviewQueueKind, ReviewQueuePriority
 from app.db.models import CanonicalEvent, CustomerProfile, MatchDecision
 from app.db.session import get_db
 from app.schemas.reviews import (
@@ -16,7 +17,9 @@ from app.schemas.reviews import (
     ReviewEventOut,
     ReviewItem,
     ReviewListResponse,
+    ReviewQueueListResponse,
 )
+from app.services.review_queue_read_model import ReviewQueueFilters, list_review_queue
 from app.services.review_service import list_pending_reviews, resolve_review
 
 router = APIRouter()
@@ -32,6 +35,30 @@ def list_reviews(db: DbSession) -> ReviewListResponse:
     decisions = list_pending_reviews(db)
     items = [_review_item(db, decision) for decision in decisions]
     return ReviewListResponse(items=items, total=len(items))
+
+
+@router.get("/review-queue", response_model=ReviewQueueListResponse)
+def review_queue(
+    db: DbSession,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    cursor: Annotated[str | None, Query(min_length=1, max_length=1000)] = None,
+    status: Literal["pending"] = "pending",
+    channel: Channel | None = None,
+    kind: ReviewQueueKind | None = None,
+    priority: ReviewQueuePriority | None = None,
+) -> ReviewQueueListResponse:
+    """Return a server-classified, operator-safe page of pending reviews."""
+    return list_review_queue(
+        db,
+        ReviewQueueFilters(
+            status=status,
+            channel=channel,
+            kind=kind,
+            priority=priority,
+        ),
+        limit=limit,
+        cursor=cursor,
+    )
 
 
 @router.post("/reviews/{match_decision_id}/resolve", response_model=ResolveReviewResponse)

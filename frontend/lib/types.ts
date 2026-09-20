@@ -23,6 +23,14 @@ export type ReviewDecision = "approve_link" | "reject_link" | "create_profile";
 
 export type ReviewStatus = "pending" | "approved" | "rejected" | "profile_created";
 
+export type ReviewQueueKind =
+  | "strong_identifier_conflict"
+  | "ambiguous_moderate_match"
+  | "same_name_collision"
+  | "incomplete_evidence";
+
+export type ReviewQueuePriority = "critical" | "high" | "standard";
+
 export type AlertType = "unresolved_refund" | "repeat_contact";
 
 export type AlertSeverity = "low" | "medium" | "high" | "critical";
@@ -189,6 +197,54 @@ export interface ReviewItem {
 export interface ReviewListResponse {
   items: ReviewItem[];
   total: number;
+}
+
+export interface ReviewQueueCandidateOut {
+  profile_id: string;
+  display_name: string | null;
+  score: number;
+  matched_fields: string[];
+}
+
+export interface ReviewQueueEvidenceOut {
+  field: string;
+  result: string;
+  weight: number;
+  message: string;
+}
+
+export interface ReviewQueueConflictOut {
+  fields: string[];
+  message: string;
+}
+
+export interface ReviewQueueItem {
+  match_decision_id: string;
+  created_at: string;
+  review_kind: ReviewQueueKind;
+  priority: ReviewQueuePriority;
+  event: ReviewEventOut;
+  candidates: ReviewQueueCandidateOut[];
+  evidence: ReviewQueueEvidenceOut[];
+  conflicts: ReviewQueueConflictOut[];
+  missing_strong_identifiers: string[];
+  reason_code: string;
+  reason: string;
+}
+
+export interface ReviewQueueSummary {
+  pending: number;
+  critical_conflicts: number;
+  incomplete_evidence: number;
+  same_name_collisions: number;
+  ambiguous_moderate_matches: number;
+}
+
+export interface ReviewQueueListResponse {
+  items: ReviewQueueItem[];
+  total: number;
+  next_cursor: string | null;
+  summary: ReviewQueueSummary;
 }
 
 export interface ResolveReviewRequest {

@@ -27,6 +27,9 @@ import type {
   ResolveReviewRequest,
   ResolveReviewResponse,
   ReviewListResponse,
+  ReviewQueueKind,
+  ReviewQueueListResponse,
+  ReviewQueuePriority,
 } from "./types";
 
 export class ApiClientError extends Error {
@@ -210,6 +213,31 @@ export async function getReviews(signal?: AbortSignal): Promise<ReviewListRespon
   });
 
   return handleResponse<ReviewListResponse>(response);
+}
+
+export async function getReviewQueue(params?: {
+  limit?: number;
+  cursor?: string;
+  channel?: Channel;
+  kind?: ReviewQueueKind;
+  priority?: ReviewQueuePriority;
+  signal?: AbortSignal;
+}): Promise<ReviewQueueListResponse> {
+  const baseUrl = getBaseUrl();
+  const searchParams = new URLSearchParams();
+  if (params?.limit) searchParams.set("limit", String(params.limit));
+  if (params?.cursor) searchParams.set("cursor", params.cursor);
+  if (params?.channel) searchParams.set("channel", params.channel);
+  if (params?.kind) searchParams.set("kind", params.kind);
+  if (params?.priority) searchParams.set("priority", params.priority);
+
+  const query = searchParams.toString();
+  const response = await fetch(`${baseUrl}/api/review-queue${query ? `?${query}` : ""}`, {
+    cache: "no-store",
+    signal: params?.signal ?? AbortSignal.timeout(5_000),
+  });
+
+  return handleResponse<ReviewQueueListResponse>(response);
 }
 
 export async function resolveReview(

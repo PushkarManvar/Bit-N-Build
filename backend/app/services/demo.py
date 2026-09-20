@@ -11,6 +11,7 @@ import os
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Literal
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
@@ -49,6 +50,8 @@ RAW_FILES = [
     "call_center_events.jsonl",
     "store_events.jsonl",
 ]
+CURATED_REVIEW_QUEUE_FILE = "curated_review_queue.json"
+DemoSeed = Literal["curated", "full"]
 
 
 class DemoError(AppError):
@@ -113,12 +116,44 @@ def _load_baseline(db: Session, data_dir: Path) -> dict[str, int]:
     return counts
 
 
-def reset_demo(db: Session, data_dir: Path | None = None) -> dict[str, int]:
-    """Wipe all operational data and reload the synthetic base fixtures."""
+def _load_curated_review_seed(db: Session, data_dir: Path) -> dict[str, int]:
+    """Ingest the deterministic three-case review fixture for the demo reset."""
+    path = data_dir / "demo" / CURATED_REVIEW_QUEUE_FILE
+    with path.open("r", encoding="utf-8") as handle:
+        payload = json.load(handle)
+
+    counts = {"received": 0, "duplicates": 0, "failed": 0, "invalid": 0}
+    for event_payload in payload.get("events", []):
+        try:
+            envelope = EventIngestionRequest.model_validate(event_payload)
+        except Exception:
+            counts["invalid"] += 1
+            continue
+        result = ingest_event(db, envelope)
+        if result.http_status == 201:
+            counts["received"] += 1
+        elif result.http_status == 200:
+            counts["duplicates"] += 1
+        else:
+            counts["failed"] += 1
+    db.commit()
+    return counts
+
+
+def reset_demo(
+    db: Session,
+    data_dir: Path | None = None,
+    *,
+    seed: DemoSeed = "full",
+) -> dict[str, int]:
+    """Wipe operational data and load either the full or curated synthetic seed."""
     for model in _DELETE_ORDER:
         db.execute(delete(model))
     db.commit()
-    return _load_baseline(db, data_dir or default_data_dir())
+    resolved_data_dir = data_dir or default_data_dir()
+    if seed == "curated":
+        return _load_curated_review_seed(db, resolved_data_dir)
+    return _load_baseline(db, resolved_data_dir)
 
 
 def _load_scenario(data_dir: Path, scenario: str) -> list[dict]:

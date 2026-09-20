@@ -68,6 +68,19 @@ def test_reset_clears_existing_data(db_session, tmp_path: Path) -> None:
     assert int(db_session.scalar(select(func.count()).select_from(RawEvent)) or 0) == 1
 
 
+def test_reset_endpoint_defaults_to_the_curated_review_seed(client) -> None:
+    response = client.post("/api/demo/reset")
+
+    assert response.status_code == 200
+    assert response.json()["loaded"] == {
+        "received": 8,
+        "duplicates": 0,
+        "failed": 0,
+        "invalid": 0,
+    }
+    assert client.get("/api/reviews").json()["total"] == 3
+
+
 def test_start_ingests_first_step(db_session, tmp_path: Path) -> None:
     steps = [
         _riya_step("DEMO-WEB-01", "product_viewed", "2026-09-14T08:00:00Z"),

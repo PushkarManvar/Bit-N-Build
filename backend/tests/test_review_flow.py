@@ -69,6 +69,146 @@ def test_review_queue_lists_pending_decision(
     assert item["reason"] != ""
 
 
+def test_same_name_without_identifier_routes_to_review_without_a_candidate(client) -> None:
+    first_known = client.post(
+        "/api/events",
+        json={
+            "source_event_id": "WEB-NAME-01",
+            "channel": "web",
+            "event_type": "product_viewed",
+            "occurred_at": "2026-09-14T10:00:00Z",
+            "schema_version": "1.0",
+            "identifiers": [{"type": "email", "value": "aarav.a@example.com"}],
+            "entity_references": {},
+            "attributes": {"customer_name": "Aarav Patel", "city": "Pune"},
+        },
+    )
+    second_known = client.post(
+        "/api/events",
+        json={
+            "source_event_id": "WEB-NAME-02",
+            "channel": "web",
+            "event_type": "product_viewed",
+            "occurred_at": "2026-09-14T10:01:00Z",
+            "schema_version": "1.0",
+            "identifiers": [{"type": "email", "value": "aarav.b@example.com"}],
+            "entity_references": {},
+            "attributes": {"customer_name": "Aarav Patel", "city": "Pune"},
+        },
+    )
+    assert first_known.status_code == 201
+    assert second_known.status_code == 201
+    known_profile_id = first_known.json()["profile_id"]
+
+    collision = client.post(
+        "/api/events",
+        json={
+            "source_event_id": "STORE-NAME-01",
+            "channel": "physical_store",
+            "event_type": "store_visited",
+            "occurred_at": "2026-09-15T10:00:00Z",
+            "schema_version": "1.0",
+            "identifiers": [],
+            "entity_references": {},
+            "attributes": {"customer_name": "  aarav   patel  ", "city": " pune "},
+        },
+    )
+
+    assert collision.status_code == 201
+    assert collision.json()["match_decision"] == "review_required"
+    assert collision.json()["profile_id"] is None
+    assert collision.json()["match_score"] == 0
+
+    queue = client.get("/api/reviews")
+    assert queue.status_code == 200
+    item = queue.json()["items"][0]
+    assert item["best_candidate"] is None
+    assert item["reason"] == (
+        "A matching name exists, but no identifier evidence supports a link."
+    )
+    assert known_profile_id not in str(item)
+    blocked = client.post(
+        f"/api/reviews/{item['match_decision_id']}/resolve",
+        json={
+            "action": "approve_link",
+            "selected_profile_id": known_profile_id,
+            "reviewer_name": "Demo Reviewer",
+        },
+    )
+    assert blocked.status_code == 409
+    assert blocked.json()["error"]["code"] == "REVIEW_APPROVAL_BLOCKED"
+
+
+def test_strong_conflict_cannot_be_approved_into_either_candidate(client, db_session) -> None:
+    first = client.post(
+        "/api/events",
+        json={
+            "source_event_id": "WEB-CONFLICT-01",
+            "channel": "web",
+            "event_type": "product_viewed",
+            "occurred_at": "2026-09-14T10:00:00Z",
+            "schema_version": "1.0",
+            "identifiers": [{"type": "email", "value": "one@example.com"}],
+            "entity_references": {},
+            "attributes": {"customer_name": "First Customer"},
+        },
+    )
+    second = client.post(
+        "/api/events",
+        json={
+            "source_event_id": "WEB-CONFLICT-02",
+            "channel": "web",
+            "event_type": "product_viewed",
+            "occurred_at": "2026-09-14T10:01:00Z",
+            "schema_version": "1.0",
+            "identifiers": [{"type": "phone", "value": "9876500000"}],
+            "entity_references": {},
+            "attributes": {"customer_name": "Second Customer"},
+        },
+    )
+    assert first.status_code == 201
+    assert second.status_code == 201
+
+    conflict = client.post(
+        "/api/events",
+        json={
+            "source_event_id": "CALL-CONFLICT-01",
+            "channel": "call_center",
+            "event_type": "support_contacted",
+            "occurred_at": "2026-09-15T10:00:00Z",
+            "schema_version": "1.0",
+            "identifiers": [
+                {"type": "email", "value": "one@example.com"},
+                {"type": "phone", "value": "9876500000"},
+            ],
+            "entity_references": {},
+            "attributes": {"customer_name": "Conflicting Customer"},
+        },
+    )
+    assert conflict.status_code == 201
+    assert conflict.json()["match_decision"] == "review_required"
+
+    decision = db_session.scalar(
+        select(MatchDecision).where(
+            MatchDecision.canonical_event_id == uuid.UUID(conflict.json()["canonical_event_id"])
+        )
+    )
+    assert decision is not None
+    response = client.post(
+        f"/api/reviews/{decision.id}/resolve",
+        json={
+            "action": "approve_link",
+            "selected_profile_id": first.json()["profile_id"],
+            "reviewer_name": "Demo Reviewer",
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "REVIEW_APPROVAL_BLOCKED"
+    db_session.refresh(decision)
+    assert decision.review_status == ReviewStatus.PENDING
+
+
 def test_approve_link_attaches_event_and_reruns_rules(
     client, db_session
 ) -> None:

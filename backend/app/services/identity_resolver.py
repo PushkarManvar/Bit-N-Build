@@ -18,6 +18,9 @@ AUTO_LINK_THRESHOLD = 80
 REVIEW_THRESHOLD = 50
 TIE_DELTA = 5
 MAX_SCORE = 100
+SAME_NAME_COLLISION_REASON = (
+    "A matching name exists, but no identifier evidence supports a link."
+)
 
 STRONG_WEIGHTS: dict[str, int] = {
     "customer_id": 100,
@@ -175,6 +178,8 @@ def decide(
     event: NormalizedEvent,
     candidates: list[CandidateInfo],
     field_profile_map: dict[str, list[str]],
+    *,
+    same_name_collision: bool = False,
 ) -> DecisionResult:
     """Score all candidates and produce an explainable identity decision."""
     event_fields = _event_field_map(event)
@@ -187,6 +192,18 @@ def decide(
         {"profile_id": s.profile_id, "retrieved_by": s.retrieved_by, "score": s.score}
         for s in scored
     ]
+
+    if not scored and same_name_collision:
+        return DecisionResult(
+            outcome=IdentityOutcome.REVIEW_REQUIRED,
+            score=0,
+            selected_profile_id=None,
+            evidence=[],
+            conflicts=[],
+            candidates=[],
+            reason=SAME_NAME_COLLISION_REASON,
+            thresholds=THRESHOLDS,
+        )
 
     if not scored:
         return DecisionResult(

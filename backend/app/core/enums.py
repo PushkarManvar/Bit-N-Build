@@ -78,6 +78,23 @@ class ReviewStatus(StrEnum):
     PROFILE_CREATED = "profile_created"
 
 
+class ReviewQueueKind(StrEnum):
+    """Server-derived classification for an unresolved review decision."""
+
+    STRONG_IDENTIFIER_CONFLICT = "strong_identifier_conflict"
+    AMBIGUOUS_MODERATE_MATCH = "ambiguous_moderate_match"
+    SAME_NAME_COLLISION = "same_name_collision"
+    INCOMPLETE_EVIDENCE = "incomplete_evidence"
+
+
+class ReviewQueuePriority(StrEnum):
+    """Operational priority derived from a review queue classification."""
+
+    CRITICAL = "critical"
+    HIGH = "high"
+    STANDARD = "standard"
+
+
 class DemoRunStatus(StrEnum):
     RUNNING = "running"
     COMPLETED = "completed"
