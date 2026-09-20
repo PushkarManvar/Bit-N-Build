@@ -18,6 +18,9 @@ AUTO_LINK_THRESHOLD = 80
 REVIEW_THRESHOLD = 50
 TIE_DELTA = 5
 MAX_SCORE = 100
+SAME_NAME_COLLISION_REASON = (
+    "A matching name exists, but no identifier evidence supports a link."
+)
 
 STRONG_WEIGHTS: dict[str, int] = {
     "customer_id": 100,
@@ -198,7 +201,7 @@ def decide(
             evidence=[],
             conflicts=[],
             candidates=[],
-            reason="A matching name exists, but no identifier evidence supports a link.",
+            reason=SAME_NAME_COLLISION_REASON,
             thresholds=THRESHOLDS,
         )
 
