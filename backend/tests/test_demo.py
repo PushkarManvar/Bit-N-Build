@@ -129,7 +129,10 @@ def test_demo_run_produces_alerts_and_review(
                 {"type": "device_id", "value": "dev-17"},
             ],
             "entity_references": {"order_id": "ORD-204"},
-            "attributes": {},
+            "attributes": {
+                "customer_name": "Riya Shah",
+                "notes": "Refund not received",
+            },
         },
         {
             "source_event_id": "DEMO-CC-01",
@@ -142,7 +145,10 @@ def test_demo_run_produces_alerts_and_review(
                 {"type": "email", "value": "RIYA@EXAMPLE.COM"},
             ],
             "entity_references": {"order_id": "ORD-204"},
-            "attributes": {},
+            "attributes": {
+                "customer_name": "Riya Shah",
+                "notes": "Second follow-up",
+            },
         },
         {
             "source_event_id": "DEMO-STORE-01",
@@ -168,6 +174,21 @@ def test_demo_run_produces_alerts_and_review(
         ).all()
     )
     assert alert_types == {AlertType.UNRESOLVED_REFUND, AlertType.REPEAT_CONTACT}
+
+    app_support = db_session.scalar(
+        select(CanonicalEvent)
+        .join(RawEvent)
+        .where(RawEvent.source_event_id == "DEMO-APP-01")
+    )
+    call_support = db_session.scalar(
+        select(CanonicalEvent)
+        .join(RawEvent)
+        .where(RawEvent.source_event_id == "DEMO-CC-01")
+    )
+    assert app_support is not None
+    assert call_support is not None
+    assert app_support.attributes["contact_reason"] == "refund_not_received"
+    assert call_support.attributes["contact_reason"] == "return_status"
 
 
 def test_dashboard_updates_endpoint(

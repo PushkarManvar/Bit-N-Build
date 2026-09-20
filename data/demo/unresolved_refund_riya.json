@@ -25,7 +25,10 @@
         { "type": "device_id", "value": "dev-17" }
       ],
       "entity_references": { "order_id": "ORD-204" },
-      "attributes": { "customer_name": "Riya Shah" }
+      "attributes": {
+        "customer_name": "Riya Shah",
+        "notes": "Refund not received"
+      }
     },
     {
       "source_event_id": "DEMO-CC-01",
@@ -38,7 +41,10 @@
         { "type": "email", "value": "RIYA.SHAH@EXAMPLE.COM" }
       ],
       "entity_references": { "order_id": "ORD-204" },
-      "attributes": { "customer_name": "Riya Shah" }
+      "attributes": {
+        "customer_name": "Riya Shah",
+        "notes": "Second follow-up"
+      }
     },
     {
       "source_event_id": "DEMO-STORE-01",
